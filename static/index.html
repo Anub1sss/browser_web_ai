@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Task Hunter</title>
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+	<style>
+		:root {
+			--bg: #0d0f12;
+			--bg-card: #15181e;
+			--bg-input: #1a1e26;
+			--border: #2a303c;
+			--text: #e6edf3;
+			--text-muted: #8b949e;
+			--accent: #f59e0b;
+			--accent-dim: #d97706;
+			--success: #22c55e;
+			--error: #ef4444;
+			--warn: #eab308;
+			--radius: 12px;
+			--shadow: 0 4px 24px rgba(0,0,0,0.4);
+		}
+		* { box-sizing: border-box; }
+		body {
+			margin: 0;
+			min-height: 100vh;
+			background: var(--bg);
+			background-image: radial-gradient(ellipse 80% 50% at 50% -20%, rgba(245,158,11,0.08), transparent);
+			color: var(--text);
+			font-family: 'Outfit', sans-serif;
+			font-size: 16px;
+			line-height: 1.5;
+		}
+		.app { max-width: 720px; margin: 0 auto; padding: 2rem 1.5rem; }
+		header { margin-bottom: 2rem; text-align: center; }
+		h1 {
+			font-size: 1.75rem;
+			font-weight: 700;
+			letter-spacing: -0.02em;
+			margin: 0 0 0.25rem 0;
+			background: linear-gradient(135deg, var(--text) 0%, var(--text-muted) 100%);
+			-webkit-background-clip: text;
+			-webkit-text-fill-color: transparent;
+			background-clip: text;
+		}
+		.subtitle { color: var(--text-muted); font-size: 0.95rem; }
+		.card {
+			background: var(--bg-card);
+			border: 1px solid var(--border);
+			border-radius: var(--radius);
+			padding: 1.5rem;
+			margin-bottom: 1.5rem;
+			box-shadow: var(--shadow);
+		}
+		.card h2 {
+			font-size: 1rem;
+			font-weight: 600;
+			color: var(--text-muted);
+			margin: 0 0 1rem 0;
+			text-transform: uppercase;
+			letter-spacing: 0.05em;
+		}
+		label { display: block; font-size: 0.875rem; color: var(--text-muted); margin-bottom: 0.35rem; }
+		textarea {
+			width: 100%;
+			min-height: 120px;
+			padding: 0.75rem 1rem;
+			background: var(--bg-input);
+			border: 1px solid var(--border);
+			border-radius: 8px;
+			color: var(--text);
+			font-family: 'JetBrains Mono', monospace;
+			font-size: 0.9rem;
+			resize: vertical;
+			transition: border-color 0.2s;
+		}
+		textarea:focus { outline: none; border-color: var(--accent); }
+		textarea::placeholder { color: var(--text-muted); opacity: 0.7; }
+		select, input[type="text"] {
+			width: 100%;
+			padding: 0.6rem 1rem;
+			background: var(--bg-input);
+			border: 1px solid var(--border);
+			border-radius: 8px;
+			color: var(--text);
+			font-family: inherit;
+			font-size: 0.95rem;
+		}
+		select:focus, input:focus { outline: none; border-color: var(--accent); }
+		.row { display: flex; gap: 1rem; align-items: flex-end; flex-wrap: wrap; }
+		.row .field { flex: 1; min-width: 140px; }
+		.btn {
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
+			gap: 0.5rem;
+			padding: 0.75rem 1.25rem;
+			font-family: inherit;
+			font-size: 0.95rem;
+			font-weight: 600;
+			border: none;
+			border-radius: 8px;
+			cursor: pointer;
+			transition: transform 0.1s, box-shadow 0.2s;
+		}
+		.btn:active { transform: scale(0.98); }
+		.btn-primary {
+			background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dim) 100%);
+			color: #111;
+		}
+		.btn-primary:hover { box-shadow: 0 0 20px rgba(245,158,11,0.3); }
+		.btn-primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+		.btn-success { background: var(--success); color: #111; }
+		.btn-danger { background: var(--error); color: #fff; }
+		.status-box {
+			padding: 1rem;
+			border-radius: 8px;
+			font-size: 0.9rem;
+			margin-top: 1rem;
+		}
+		.status-box.running { background: rgba(245,158,11,0.12); border: 1px solid rgba(245,158,11,0.3); color: var(--accent); }
+		.status-box.done { background: rgba(34,197,94,0.12); border: 1px solid rgba(34,197,94,0.3); color: var(--success); }
+		.status-box.error { background: rgba(239,68,68,0.12); border: 1px solid rgba(239,68,68,0.3); color: var(--error); }
+		.status-box .label { font-weight: 600; margin-bottom: 0.25rem; }
+		.pulse { animation: pulse 1.5s ease-in-out infinite; }
+		@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
+		/* Steps list */
+		.steps-list { margin-top: 0.5rem; }
+		.step-item {
+			background: var(--bg-input);
+			border: 1px solid var(--border);
+			border-radius: 8px;
+			padding: 0.75rem 1rem;
+			margin-bottom: 0.5rem;
+			font-size: 0.9rem;
+		}
+		.step-item .step-num { color: var(--accent); font-weight: 600; margin-bottom: 0.25rem; }
+		.step-item .step-memory { color: var(--text-muted); margin-bottom: 0.25rem; }
+		.step-item .step-actions { font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; }
+		.step-item .step-goal { color: var(--text-muted); font-style: italic; margin-top: 0.25rem; }
+		.step-item .step-url { font-size: 0.8rem; color: var(--text-muted); margin-top: 0.25rem; }
+		/* Confirm destructive */
+		.confirm-box {
+			background: rgba(234,179,8,0.15);
+			border: 1px solid rgba(234,179,8,0.4);
+			border-radius: 8px;
+			padding: 1rem;
+			margin-top: 1rem;
+			color: var(--warn);
+		}
+		.confirm-box .confirm-q { font-weight: 600; margin-bottom: 0.75rem; }
+		.confirm-box .confirm-btns { display: flex; gap: 0.5rem; }
+		footer { text-align: center; color: var(--text-muted); font-size: 0.8rem; margin-top: 2rem; }
+	</style>
+</head>
+<body>
+	<div class="app">
+		<header>
+			<h1>Task Hunter</h1>
+			<p class="subtitle">Автономный браузерный агент — введите задачу на естественном языке</p>
+		</header>
+
+		<div class="card">
+			<h2>Запуск задачи</h2>
+			<div style="margin-bottom: 1rem;">
+				<label for="task">Задача</label>
+				<textarea id="task" placeholder="Например: открой google.com и найди погоду в Москве"></textarea>
+			</div>
+			<div class="row">
+				<div class="field">
+					<label for="profile">Профиль</label>
+					<select id="profile"></select>
+				</div>
+				<div class="field">
+					<label for="provider">Провайдер</label>
+					<select id="provider">
+						<option value="">Из профиля</option>
+						<option value="custom">Browser AI</option>
+						<option value="openai">OpenAI</option>
+						<option value="glm">GLM</option>
+					</select>
+				</div>
+				<div class="field">
+					<label for="model">Модель</label>
+					<select id="model">
+						<option value="">По умолчанию</option>
+					</select>
+				</div>
+				<button type="button" class="btn btn-primary" id="runBtn">Запустить</button>
+			</div>
+			<div class="row" style="margin-top: 1rem;">
+				<div class="field">
+					<label for="browserBackend">Бэкенд браузера</label>
+					<select id="browserBackend">
+						<option value="">Из профиля</option>
+						<option value="cdp">CDP — только Chromium</option>
+						<option value="playwright" selected>Playwright — выбор браузера ниже</option>
+					</select>
+				</div>
+				<div class="field" id="playwrightBrowserWrap">
+					<label for="playwrightBrowser">Какой браузер запускать <span id="playwrightBrowserHint" style="color: var(--text-muted); font-size: 0.85rem;">(при Playwright)</span></label>
+					<select id="playwrightBrowser">
+						<option value="chromium">Chromium</option>
+						<option value="firefox">Firefox</option>
+						<option value="webkit">WebKit (Safari)</option>
+					</select>
+					<small id="playwrightBrowserNote" style="display:none; color: var(--text-muted); font-size: 0.8rem;">Сейчас запустится выбранный браузер</small>
+				</div>
+			</div>
+			<div id="statusBox" class="status-box" style="display: none;"></div>
+			<div id="confirmBox" class="confirm-box" style="display: none;">
+				<div class="confirm-q" id="confirmQuestion"></div>
+				<div class="confirm-btns">
+					<button type="button" class="btn btn-success" id="confirmYes">Да</button>
+					<button type="button" class="btn btn-danger" id="confirmNo">Нет</button>
+				</div>
+			</div>
+		</div>
+
+		<div class="card">
+			<h2>Шаги и действия</h2>
+			<div id="stepsList" class="steps-list"></div>
+		</div>
+
+		<footer>Task Hunter · Browser AI Agent</footer>
+	</div>
+
+	<script>
+		const API = '';
+		async function get(url) {
+			const r = await fetch(API + url);
+			if (!r.ok) throw new Error(await r.text());
+			return r.json();
+		}
+		async function post(url, body) {
+			const r = await fetch(API + url, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify(body)
+			});
+			if (!r.ok) throw new Error(await r.text());
+			return r.json();
+		}
+
+		const profileSelect = document.getElementById('profile');
+		const providerSelect = document.getElementById('provider');
+		const modelSelect = document.getElementById('model');
+		const taskInput = document.getElementById('task');
+		const browserBackendSelect = document.getElementById('browserBackend');
+		const playwrightBrowserSelect = document.getElementById('playwrightBrowser');
+		const playwrightBrowserWrap = document.getElementById('playwrightBrowserWrap');
+
+		const MODELS_BY_PROVIDER = {
+			custom: [
+				{ value: '', label: 'По умолчанию (bu-latest)' },
+				{ value: 'bu-latest', label: 'bu-latest' }
+			],
+			openai: [
+				{ value: '', label: 'По умолчанию (gpt-4o)' },
+				{ value: 'gpt-4o', label: 'gpt-4o' },
+				{ value: 'gpt-4o-mini', label: 'gpt-4o-mini' },
+				{ value: 'gpt-4-turbo', label: 'gpt-4-turbo' }
+			],
+			glm: [
+				{ value: '', label: 'По умолчанию (GLM-4.6V-Flash)' },
+				{ value: 'GLM-4.6V-Flash', label: 'GLM-4.6V-Flash' }
+			]
+		};
+
+		function updateModelOptions() {
+			const provider = providerSelect.value;
+			modelSelect.innerHTML = '';
+			if (!provider) {
+				modelSelect.innerHTML = '<option value="">По умолчанию</option>';
+				return;
+			}
+			const options = MODELS_BY_PROVIDER[provider] || [{ value: '', label: 'По умолчанию' }];
+			options.forEach(opt => {
+				const o = document.createElement('option');
+				o.value = opt.value;
+				o.textContent = opt.label;
+				modelSelect.appendChild(o);
+			});
+		}
+		const runBtn = document.getElementById('runBtn');
+		const statusBox = document.getElementById('statusBox');
+		const stepsList = document.getElementById('stepsList');
+		const confirmBox = document.getElementById('confirmBox');
+		const confirmQuestion = document.getElementById('confirmQuestion');
+		const confirmYes = document.getElementById('confirmYes');
+		const confirmNo = document.getElementById('confirmNo');
+
+		function renderSteps(steps) {
+			if (!steps || steps.length === 0) {
+				stepsList.innerHTML = '<div style="color: var(--text-muted); font-size: 0.9rem;">Пока нет шагов. Запустите задачу.</div>';
+				return;
+			}
+			stepsList.innerHTML = steps.map(s => {
+				const actionsStr = (s.actions || []).map(a => {
+					const p = a.params && Object.keys(a.params).length ? ' ' + JSON.stringify(a.params) : '';
+					return a.name + p;
+				}).join(', ');
+				let html = '<div class="step-item">';
+				html += '<div class="step-num">Шаг ' + s.step_number + '</div>';
+				if (s.memory) html += '<div class="step-memory">' + escapeHtml(s.memory) + '</div>';
+				if (actionsStr) html += '<div class="step-actions">' + escapeHtml(actionsStr) + '</div>';
+				if (s.next_goal) html += '<div class="step-goal">Цель: ' + escapeHtml(s.next_goal) + '</div>';
+				if (s.url) html += '<div class="step-url">' + escapeHtml(s.url) + '</div>';
+				html += '</div>';
+				return html;
+			}).join('');
+		}
+
+		function escapeHtml(str) {
+			const div = document.createElement('div');
+			div.textContent = str;
+			return div.innerHTML;
+		}
+
+		function showStatus(cls, label, message) {
+			statusBox.style.display = 'block';
+			statusBox.className = 'status-box ' + cls;
+			statusBox.innerHTML = '<div class="label">' + escapeHtml(label) + '</div><div>' + escapeHtml(message || '') + '</div>';
+		}
+
+		function showConfirm(question, taskId, onResolve) {
+			confirmQuestion.textContent = question;
+			confirmBox.style.display = 'block';
+			confirmYes.onclick = () => sendConfirm(taskId, 'yes', onResolve);
+			confirmNo.onclick = () => sendConfirm(taskId, 'no', onResolve);
+		}
+
+		function hideConfirm() {
+			confirmBox.style.display = 'none';
+			confirmYes.onclick = null;
+			confirmNo.onclick = null;
+		}
+
+		async function sendConfirm(taskId, answer, onResolve) {
+			try {
+				await post('/api/run/' + taskId + '/confirm', { answer });
+				hideConfirm();
+				onResolve();
+			} catch (e) {
+				statusBox.innerHTML = '<div class="label">Ошибка</div><div>' + escapeHtml(e.message) + '</div>';
+			}
+		}
+
+		let pollAborted = false;
+		async function pollStatus(taskId) {
+			pollAborted = false;
+			const maxAttempts = 600;
+			for (let i = 0; i < maxAttempts && !pollAborted; i++) {
+				const s = await get('/api/run/' + taskId);
+				renderSteps(s.steps || []);
+
+				if (s.pending_confirm && s.pending_confirm.question) {
+					showStatus('running', 'Требуется подтверждение', 'Ответьте на вопрос ниже.');
+					await new Promise(resolve => {
+						showConfirm(s.pending_confirm.question, taskId, resolve);
+					});
+					continue;
+				}
+
+				if (s.status === 'done') {
+					showStatus('done', 'Готово', s.message || 'Задача выполнена.');
+					runBtn.disabled = false;
+					hideConfirm();
+					return;
+				}
+				if (s.status === 'error') {
+					showStatus('error', 'Ошибка', s.message || 'Выполнение не удалось.');
+					runBtn.disabled = false;
+					hideConfirm();
+					return;
+				}
+				showStatus('running', 'Выполняется…', (s.message || 'Ожидание…'));
+				const last = statusBox.querySelector('div:last-child');
+				if (last) last.classList.add('pulse');
+				await new Promise(r => setTimeout(r, 1500));
+			}
+			showStatus('error', 'Таймаут', 'Превышено время ожидания.');
+			runBtn.disabled = false;
+		}
+
+		runBtn.addEventListener('click', async () => {
+			const task = (taskInput.value || '').trim();
+			if (!task) {
+				showStatus('error', 'Ошибка', 'Введите текст задачи.');
+				return;
+			}
+			runBtn.disabled = true;
+			hideConfirm();
+			renderSteps([]);
+			showStatus('running', 'Запуск…', 'Старт задачи…');
+			try {
+				const body = {
+					task,
+					profile_name: profileSelect.value || undefined
+				};
+				if (providerSelect.value) body.provider = providerSelect.value;
+				const modelVal = (modelSelect.value || '').trim();
+				if (modelVal) body.model = modelVal;
+				// Бэкенд браузера: пустая строка = «из профиля»
+				body.browser_backend = browserBackendSelect.value || null;
+				if (browserBackendSelect.value === 'playwright') {
+					body.playwright_browser = playwrightBrowserSelect.value || 'chromium';
+				} else {
+					body.playwright_browser = null;
+				}
+				const res = await post('/api/run', body);
+				if (res.task_id) await pollStatus(res.task_id);
+				else {
+					showStatus('error', 'Ошибка', 'Нет task_id в ответе.');
+					runBtn.disabled = false;
+				}
+			} catch (e) {
+				showStatus('error', 'Ошибка', e.message || String(e));
+				runBtn.disabled = false;
+			}
+		});
+
+		async function loadProfiles() {
+			const data = await get('/api/profiles');
+			profileSelect.innerHTML = '';
+			(data.profiles || []).forEach(name => {
+				const opt = document.createElement('option');
+				opt.value = name;
+				opt.textContent = name + (name === data.default_profile ? ' (по умолчанию)' : '');
+				profileSelect.appendChild(opt);
+			});
+		}
+
+		function updatePlaywrightBrowserVisibility() {
+			const isPlaywright = browserBackendSelect.value === 'playwright';
+			playwrightBrowserWrap.style.opacity = isPlaywright ? '1' : '0.6';
+			playwrightBrowserWrap.style.pointerEvents = isPlaywright ? 'auto' : 'none';
+			const note = document.getElementById('playwrightBrowserNote');
+			if (note) note.style.display = isPlaywright ? 'block' : 'none';
+		}
+		browserBackendSelect.addEventListener('change', updatePlaywrightBrowserVisibility);
+		updatePlaywrightBrowserVisibility();
+
+		providerSelect.addEventListener('change', updateModelOptions);
+		loadProfiles();
+		updateModelOptions();
+		renderSteps([]);
+	</script>
+</body>
+</html>
