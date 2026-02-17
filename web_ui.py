@@ -21,6 +21,13 @@ load_dotenv()
 from browser_ai.agent.views import ActionResult
 from browser_ai.tools.service import Tools
 
+from orchestrator import (
+	GEO_PROXY_PRESETS,
+	MemorySystem,
+	OrchestratorConfig,
+	TaskOrchestrator,
+	TaskState,
+)
 from task_hunter import (
 	DEFAULT_PROFILE_NAME,
 	configure_logs,
@@ -31,6 +38,10 @@ from task_hunter import (
 	save_profiles,
 	save_queue,
 )
+
+# Shared orchestrator and memory instances
+_memory = MemorySystem()
+_orchestrator = TaskOrchestrator(memory=_memory)
 
 # In-memory run status: task_id -> { status, message, steps[], pending_confirm?, _event, _confirm_result }
 run_status: dict[str, dict] = {}
@@ -121,10 +132,19 @@ app.add_middleware(
 class RunTaskRequest(BaseModel):
 	task: str
 	profile_name: str = DEFAULT_PROFILE_NAME
-	provider: str | None = None  # override for this run (custom / openai / glm)
-	model: str | None = None  # override model for this run
+	provider: str | None = None
+	model: str | None = None
 	browser_backend: str | None = None  # "cdp" | "playwright"
 	playwright_browser: str | None = None  # "chromium" | "firefox" | "webkit"
+	# Orchestrator options
+	enable_planner: bool = False
+	enable_validator: bool = False
+	enable_memory: bool = True
+	geo_country: str | None = None  # "us", "de", "ru", etc.
+	gologin_profile_id: str | None = None
+	gologin_api_token: str | None = None
+	max_steps_per_subgoal: int = 25
+	max_retries: int = 2
 
 
 class ConfirmRequest(BaseModel):
@@ -168,7 +188,7 @@ async def api_run(req: RunTaskRequest):
 		profile_config = {**profile_config, "provider": req.provider}
 	if req.model is not None:
 		profile_config = {**profile_config, "model": req.model}
-	# Бэкенд браузера: из формы переопределяем профиль (пусто = оставить из профиля)
+	# Browser backend
 	backend = (req.browser_backend or "").strip().lower()
 	if backend in ("cdp", "playwright"):
 		profile_config = {**profile_config, "browser_backend": backend}
@@ -178,12 +198,24 @@ async def api_run(req: RunTaskRequest):
 			else:
 				pb = profile_config.get("playwright_browser", "chromium")
 			if pb not in ("chromium", "firefox", "webkit"):
-				logging.warning("Invalid playwright_browser=%s, fallback to chromium", pb)
 				pb = "chromium"
 			profile_config = {**profile_config, "playwright_browser": pb}
-	logging.info("Run: backend=%s, browser=%s", profile_config.get("browser_backend"), profile_config.get("playwright_browser"))
+
 	task_id = str(uuid4())
 	ev = asyncio.Event()
+	# Build orchestrator config from request
+	orch_config = OrchestratorConfig(
+		enable_planner=req.enable_planner,
+		enable_validator=req.enable_validator,
+		max_retries_per_subgoal=req.max_retries,
+		enable_memory=req.enable_memory,
+		geo_country=req.geo_country,
+		gologin_profile_id=req.gologin_profile_id,
+		gologin_api_token=req.gologin_api_token,
+		max_steps_per_subgoal=req.max_steps_per_subgoal,
+	)
+	use_orchestrator = req.enable_planner or req.enable_validator or req.geo_country or req.gologin_profile_id
+
 	run_status[task_id] = {
 		"status": "running",
 		"message": "Starting...",
@@ -191,20 +223,55 @@ async def api_run(req: RunTaskRequest):
 		"pending_confirm": None,
 		"_event": ev,
 		"_confirm_result": None,
+		"orchestrator": {
+			"state": "idle",
+			"plan": [],
+			"current_subgoal": 0,
+			"enabled": use_orchestrator,
+		},
 	}
 	step_callback = _make_step_callback(task_id)
 
+	def _state_callback(ctx):
+		"""Update orchestrator state in run_status for UI polling."""
+		if task_id in run_status:
+			run_status[task_id]["orchestrator"] = {
+				"state": ctx.state.value,
+				"plan": [
+					{"id": g.id, "description": g.description, "status": g.status, "result": g.result}
+					for g in ctx.plan
+				],
+				"current_subgoal": ctx.current_subgoal_idx,
+				"enabled": True,
+			}
+
 	async def _run():
 		try:
-			ok = await run_task(
-				req.task.strip(),
-				profile_config,
-				tools_builder=build_tools_web_with_confirm,
-				step_callback=step_callback,
-				task_id=task_id,
-			)
-			run_status[task_id]["status"] = "done" if ok else "error"
-			run_status[task_id]["message"] = "Task completed successfully." if ok else "Task failed."
+			if use_orchestrator:
+				ctx = await _orchestrator.run(
+					task=req.task.strip(),
+					profile_config=profile_config,
+					config=orch_config,
+					tools_builder=build_tools_web_with_confirm,
+					step_callback=step_callback,
+					task_id=task_id,
+					state_callback=_state_callback,
+				)
+				ok = ctx.state == TaskState.DONE
+				run_status[task_id]["status"] = "done" if ok else "error"
+				run_status[task_id]["message"] = (
+					"Task completed successfully." if ok else f"Task failed: {ctx.error or 'sub-goal failed'}"
+				)
+			else:
+				ok = await run_task(
+					req.task.strip(),
+					profile_config,
+					tools_builder=build_tools_web_with_confirm,
+					step_callback=step_callback,
+					task_id=task_id,
+				)
+				run_status[task_id]["status"] = "done" if ok else "error"
+				run_status[task_id]["message"] = "Task completed successfully." if ok else "Task failed."
 		except Exception as e:
 			logging.exception("Run task failed")
 			run_status[task_id]["status"] = "error"
@@ -260,6 +327,28 @@ def api_queue_add(item: dict):
 	queue["items"].append(item)
 	save_queue(queue)
 	return {"ok": True, "queue": queue}
+
+
+# --- Memory API ---
+@app.get("/api/memory/recent")
+def api_memory_recent(limit: int = 20):
+	return {"entries": _memory.recall(limit=limit)}
+
+
+@app.get("/api/memory/tasks")
+def api_memory_tasks(limit: int = 20):
+	return {"tasks": _memory.get_recent_tasks(limit=limit)}
+
+
+@app.get("/api/memory/search")
+def api_memory_search(q: str = "", category: str = ""):
+	return {"entries": _memory.recall(key=q or None, category=category or None, limit=50)}
+
+
+# --- Geo presets ---
+@app.get("/api/geo/countries")
+def api_geo_countries():
+	return {"countries": sorted(GEO_PROXY_PRESETS.keys())}
 
 
 # --- Serve frontend ---

@@ -42,6 +42,7 @@ python3 web_ui.py
 
 - [Architecture Overview](#architecture-overview)
 - [Module Reference](#module-reference)
+  - [Orchestrator](#orchestrator)
   - [Agent](#agent)
   - [Browser](#browser)
   - [Tools](#tools)
@@ -68,6 +69,17 @@ python3 web_ui.py
 
 ```
 ┌─────────────────────────────────────────────────────────┐
+│                      User API                           │
+│  web_ui.py (FastAPI) ─► REST endpoints + static UI      │
+├─────────────────────────────────────────────────────────┤
+│                  Orchestrator Layer (NEW)                │
+│  TaskOrchestrator (FSM: idle→plan→exec→validate→done)   │
+│    │                                                    │
+│    ├── Planner (LLM → structured sub-goals)             │
+│    ├── Memory System (SQLite: cross-task persistence)   │
+│    ├── Session Manager (Geo-proxy + GoLogin CDP)        │
+│    └── Validator (Judge in-loop feedback)                │
+├─────────────────────────────────────────────────────────┤
 │                      Agent Layer                        │
 │  Agent ─► MessageManager ─► SystemPrompt ─► LLM        │
 │    │          │                                         │
@@ -107,6 +119,28 @@ python3 web_ui.py
 ---
 
 ## Module Reference
+
+### Orchestrator
+
+#### `orchestrator.py` — `TaskOrchestrator`
+
+The middle layer between User API and the Executor (Agent). Implements a finite state machine that coordinates planning, execution, validation, and memory across task sub-goals.
+
+- **Main classes:**
+  - `TaskOrchestrator` — FSM engine with states: `idle` → `planning` → `executing` → `validating` → `done` / `failed`
+  - `OrchestratorConfig` — Configuration: planner, validator, memory, geo, GoLogin, retries, max steps
+  - `OrchestratorContext` — Runtime context: task state, plan, sub-goals, memory entries, timing
+  - `SubGoal` — Structured sub-goal with status tracking and retry count
+  - `MemorySystem` — SQLite-based persistent memory for cross-task context
+- **Key features:**
+  - **Structured Planner:** LLM decomposes task into JSON array of sub-goals (max 10)
+  - **Validator in-loop:** LLM Judge evaluates each sub-goal after execution, supports retry on failure
+  - **Memory System:** SQLite DB stores task results, sub-goal outcomes, and cross-task context; recalled during planning
+  - **Geo-proxy:** Country-based proxy selection via env vars (`GEO_PROXY_US`, etc.) or presets
+  - **GoLogin integration:** Starts GoLogin profile via API, gets CDP URL, passes to `BrowserSession`
+  - **Backward compatible:** When orchestrator features are disabled, falls back to direct `run_task()` execution
+
+---
 
 ### Agent
 

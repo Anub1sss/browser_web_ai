@@ -154,6 +154,54 @@
 		.confirm-box .confirm-q { font-weight: 600; margin-bottom: 0.75rem; }
 		.confirm-box .confirm-btns { display: flex; gap: 0.5rem; }
 		footer { text-align: center; color: var(--text-muted); font-size: 0.8rem; margin-top: 2rem; }
+		.toggle-label {
+			display: flex;
+			align-items: center;
+			gap: 0.5rem;
+			font-size: 0.9rem;
+			cursor: pointer;
+			user-select: none;
+		}
+		.toggle-label input[type="checkbox"] {
+			width: 18px;
+			height: 18px;
+			accent-color: var(--accent);
+			cursor: pointer;
+		}
+		.plan-item {
+			background: var(--bg-input);
+			border: 1px solid var(--border);
+			border-radius: 8px;
+			padding: 0.6rem 1rem;
+			margin-bottom: 0.4rem;
+			font-size: 0.9rem;
+			display: flex;
+			align-items: center;
+			gap: 0.75rem;
+		}
+		.plan-item .plan-idx { color: var(--accent); font-weight: 600; min-width: 28px; }
+		.plan-item .plan-status {
+			font-size: 0.8rem;
+			padding: 2px 8px;
+			border-radius: 4px;
+			font-weight: 600;
+		}
+		.plan-status.pending { background: rgba(139,148,158,0.2); color: var(--text-muted); }
+		.plan-status.executing { background: rgba(245,158,11,0.2); color: var(--accent); }
+		.plan-status.done { background: rgba(34,197,94,0.2); color: var(--success); }
+		.plan-status.failed { background: rgba(239,68,68,0.2); color: var(--error); }
+		.plan-status.skipped { background: rgba(139,148,158,0.15); color: var(--text-muted); }
+		.memory-item {
+			background: var(--bg-input);
+			border: 1px solid var(--border);
+			border-radius: 8px;
+			padding: 0.6rem 1rem;
+			margin-bottom: 0.4rem;
+			font-size: 0.85rem;
+		}
+		.memory-item .mem-task { color: var(--text); font-weight: 500; }
+		.memory-item .mem-state { font-size: 0.8rem; margin-left: 0.5rem; }
+		.memory-item .mem-time { color: var(--text-muted); font-size: 0.75rem; }
 	</style>
 </head>
 <body>
@@ -220,12 +268,70 @@
 			</div>
 		</div>
 
+		<!-- Orchestrator Options -->
+		<div class="card" id="orchestratorCard">
+			<h2>Оркестратор</h2>
+			<div class="row" style="margin-bottom: 1rem;">
+				<div class="field">
+					<label class="toggle-label">
+						<input type="checkbox" id="enablePlanner"> Planner (декомпозиция задачи на подцели)
+					</label>
+				</div>
+				<div class="field">
+					<label class="toggle-label">
+						<input type="checkbox" id="enableValidator"> Validator (проверка каждого подшага)
+					</label>
+				</div>
+				<div class="field">
+					<label class="toggle-label">
+						<input type="checkbox" id="enableMemory" checked> Memory (сохранять результаты)
+					</label>
+				</div>
+			</div>
+			<div class="row" style="margin-bottom: 1rem;">
+				<div class="field">
+					<label for="geoCountry">Geo-proxy (страна)</label>
+					<select id="geoCountry">
+						<option value="">Нет</option>
+					</select>
+				</div>
+				<div class="field">
+					<label for="gologinProfileId">GoLogin Profile ID</label>
+					<input type="text" id="gologinProfileId" placeholder="Оставить пустым если не нужен">
+				</div>
+			</div>
+			<div class="row">
+				<div class="field">
+					<label for="maxSteps">Макс. шагов на подцель</label>
+					<input type="text" id="maxSteps" value="25" style="width: 80px;">
+				</div>
+				<div class="field">
+					<label for="maxRetries">Повторов при ошибке</label>
+					<input type="text" id="maxRetries" value="2" style="width: 80px;">
+				</div>
+			</div>
+		</div>
+
+		<!-- Plan display -->
+		<div class="card" id="planCard" style="display: none;">
+			<h2>План (подцели)</h2>
+			<div id="planList" class="steps-list"></div>
+		</div>
+
 		<div class="card">
 			<h2>Шаги и действия</h2>
 			<div id="stepsList" class="steps-list"></div>
 		</div>
 
-		<footer>Task Hunter · Browser AI Agent</footer>
+		<!-- Memory panel -->
+		<div class="card" id="memoryCard">
+			<h2>Память (последние задачи)</h2>
+			<div id="memoryList" class="steps-list">
+				<div style="color: var(--text-muted); font-size: 0.9rem;">Загрузка...</div>
+			</div>
+		</div>
+
+		<footer>Task Hunter · Browser AI Agent · Orchestrator</footer>
 	</div>
 
 	<script>
@@ -357,6 +463,19 @@
 				const s = await get('/api/run/' + taskId);
 				renderSteps(s.steps || []);
 
+				// Render orchestrator plan if available
+				if (s.orchestrator && s.orchestrator.enabled && s.orchestrator.plan && s.orchestrator.plan.length > 0) {
+					renderPlan(s.orchestrator.plan);
+					const orchState = s.orchestrator.state || '';
+					const stateLabels = {idle:'Инициализация', planning:'Планирование…', executing:'Выполнение', validating:'Валидация…', done:'Готово', failed:'Ошибка'};
+					const stateLabel = stateLabels[orchState] || orchState;
+					if (orchState === 'planning') {
+						showStatus('running', 'Оркестратор: ' + stateLabel, 'Декомпозиция задачи на подцели…');
+					} else if (orchState === 'validating') {
+						showStatus('running', 'Оркестратор: ' + stateLabel, 'Проверка результата подшага…');
+					}
+				}
+
 				if (s.pending_confirm && s.pending_confirm.question) {
 					showStatus('running', 'Требуется подтверждение', 'Ответьте на вопрос ниже.');
 					await new Promise(resolve => {
@@ -369,12 +488,14 @@
 					showStatus('done', 'Готово', s.message || 'Задача выполнена.');
 					runBtn.disabled = false;
 					hideConfirm();
+					loadMemory();
 					return;
 				}
 				if (s.status === 'error') {
 					showStatus('error', 'Ошибка', s.message || 'Выполнение не удалось.');
 					runBtn.disabled = false;
 					hideConfirm();
+					loadMemory();
 					return;
 				}
 				showStatus('running', 'Выполняется…', (s.message || 'Ожидание…'));
@@ -386,6 +507,70 @@
 			runBtn.disabled = false;
 		}
 
+		// Orchestrator elements
+		const enablePlanner = document.getElementById('enablePlanner');
+		const enableValidator = document.getElementById('enableValidator');
+		const enableMemory = document.getElementById('enableMemory');
+		const geoCountrySelect = document.getElementById('geoCountry');
+		const gologinProfileId = document.getElementById('gologinProfileId');
+		const maxStepsInput = document.getElementById('maxSteps');
+		const maxRetriesInput = document.getElementById('maxRetries');
+		const planCard = document.getElementById('planCard');
+		const planList = document.getElementById('planList');
+		const memoryList = document.getElementById('memoryList');
+
+		function renderPlan(plan) {
+			if (!plan || plan.length === 0) {
+				planCard.style.display = 'none';
+				return;
+			}
+			planCard.style.display = 'block';
+			planList.innerHTML = plan.map(g => {
+				const statusCls = g.status || 'pending';
+				const statusLabel = {pending:'Ожидание', executing:'Выполняется', done:'Готово', failed:'Ошибка', skipped:'Пропущено'}[statusCls] || statusCls;
+				let html = '<div class="plan-item">';
+				html += '<span class="plan-idx">#' + (g.id + 1) + '</span>';
+				html += '<span style="flex:1">' + escapeHtml(g.description) + '</span>';
+				html += '<span class="plan-status ' + statusCls + '">' + statusLabel + '</span>';
+				html += '</div>';
+				return html;
+			}).join('');
+		}
+
+		async function loadGeoCountries() {
+			try {
+				const data = await get('/api/geo/countries');
+				(data.countries || []).forEach(c => {
+					const o = document.createElement('option');
+					o.value = c;
+					o.textContent = c.toUpperCase();
+					geoCountrySelect.appendChild(o);
+				});
+			} catch (e) { /* ignore */ }
+		}
+
+		async function loadMemory() {
+			try {
+				const data = await get('/api/memory/tasks?limit=10');
+				const tasks = data.tasks || [];
+				if (tasks.length === 0) {
+					memoryList.innerHTML = '<div style="color: var(--text-muted); font-size: 0.9rem;">Нет сохранённых задач.</div>';
+					return;
+				}
+				memoryList.innerHTML = tasks.map(t => {
+					const stateEmoji = {done:'✅', failed:'❌', planning:'📋', executing:'⚡', validating:'🔍'}[t.state] || '⏳';
+					let html = '<div class="memory-item">';
+					html += '<span class="mem-task">' + stateEmoji + ' ' + escapeHtml(t.task || '') + '</span>';
+					html += '<span class="mem-state ' + (t.state || '') + '">' + (t.state || '') + '</span>';
+					if (t.started_at) html += '<div class="mem-time">' + t.started_at + '</div>';
+					html += '</div>';
+					return html;
+				}).join('');
+			} catch (e) {
+				memoryList.innerHTML = '<div style="color: var(--text-muted); font-size: 0.9rem;">Memory недоступна.</div>';
+			}
+		}
+
 		runBtn.addEventListener('click', async () => {
 			const task = (taskInput.value || '').trim();
 			if (!task) {
@@ -395,16 +580,23 @@
 			runBtn.disabled = true;
 			hideConfirm();
 			renderSteps([]);
+			renderPlan([]);
 			showStatus('running', 'Запуск…', 'Старт задачи…');
 			try {
 				const body = {
 					task,
-					profile_name: profileSelect.value || undefined
+					profile_name: profileSelect.value || undefined,
+					enable_planner: enablePlanner.checked,
+					enable_validator: enableValidator.checked,
+					enable_memory: enableMemory.checked,
+					geo_country: geoCountrySelect.value || null,
+					gologin_profile_id: gologinProfileId.value.trim() || null,
+					max_steps_per_subgoal: parseInt(maxStepsInput.value) || 25,
+					max_retries: parseInt(maxRetriesInput.value) || 2,
 				};
 				if (providerSelect.value) body.provider = providerSelect.value;
 				const modelVal = (modelSelect.value || '').trim();
 				if (modelVal) body.model = modelVal;
-				// Бэкенд браузера: пустая строка = «из профиля»
 				body.browser_backend = browserBackendSelect.value || null;
 				if (browserBackendSelect.value === 'playwright') {
 					body.playwright_browser = playwrightBrowserSelect.value || 'chromium';
@@ -446,6 +638,8 @@
 
 		providerSelect.addEventListener('change', updateModelOptions);
 		loadProfiles();
+		loadGeoCountries();
+		loadMemory();
 		updateModelOptions();
 		renderSteps([]);
 	</script>
