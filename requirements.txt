@@ -1,0 +1,21 @@
+# Core agent framework (pulls in openai, pydantic, httpx, bubus, cdp-use,
+# uuid7, pyotp, posthog, anyio, markdownify, Pillow, reportlab,
+# python-docx and many other transitive dependencies)
+browser-use==0.11.3
+browser-use-sdk==2.0.13
+
+# GLM / Zhipu AI LLM provider
+zai-sdk==0.2.1
+
+# Web UI
+fastapi>=0.104.0
+uvicorn[standard]>=0.24.0
+
+# Environment
+python-dotenv>=1.0.0
+
+# Browser automation (Chromium driver)
+playwright>=1.52.0
+
+# Video / GIF recording
+imageio[ffmpeg]>=2.37.0

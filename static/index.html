@@ -553,16 +553,17 @@
 			word-break: break-all;
 		}
 
-		/* Plan items */
+		/* Plan items — Graph nodes */
 		.plan-item {
-			padding: 10px 14px;
+			padding: 12px 16px;
 			border: 1px solid var(--border);
 			border-radius: var(--radius-sm);
 			margin-bottom: 6px;
 			display: flex;
-			align-items: center;
+			align-items: flex-start;
 			gap: 10px;
 			background: var(--bg-white);
+			position: relative;
 		}
 		.plan-item .plan-idx {
 			font-size: 12px;
@@ -571,12 +572,37 @@
 			min-width: 28px;
 		}
 		.plan-item span { font-size: 13px; }
+		.plan-meta {
+			display: flex;
+			align-items: center;
+			gap: 6px;
+			flex-wrap: wrap;
+			margin-top: 4px;
+		}
+		.plan-tag {
+			font-size: 10px;
+			font-weight: 600;
+			padding: 1px 6px;
+			border-radius: 4px;
+			white-space: nowrap;
+		}
+		.plan-tag.dep { background: var(--blue-bg); color: var(--blue); }
+		.plan-tag.fallback { background: var(--amber-bg); color: #92400e; }
+		.plan-tag.failure { background: var(--red-bg); color: #991b1b; }
+		.plan-tag.captcha { background: #f5f3ff; color: #6d28d9; }
+		.plan-connector {
+			width: 2px;
+			height: 12px;
+			background: var(--border);
+			margin: 0 auto;
+		}
 		.plan-status {
 			font-size: 11px;
 			padding: 2px 8px;
 			border-radius: 6px;
 			font-weight: 600;
 			white-space: nowrap;
+			flex-shrink: 0;
 		}
 		.plan-status.pending { background: var(--bg); color: var(--text-muted); }
 		.plan-status.executing { background: var(--amber-bg); color: #92400e; }
@@ -1213,12 +1239,35 @@
 				planList.innerHTML = '<div class="empty-state"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg><p>No plan yet. Enable the planner and run a task.</p></div>';
 				return;
 			}
-			planList.innerHTML = plan.map(g => {
+			planList.innerHTML = plan.map((g, idx) => {
 				const statusCls = g.status || 'pending';
 				const statusLabel = {pending:'Pending', executing:'Executing', done:'Done', failed:'Failed', skipped:'Skipped'}[statusCls] || statusCls;
-				let html = '<div class="plan-item">';
+				let connector = idx > 0 ? '<div class="plan-connector"></div>' : '';
+				let html = connector + '<div class="plan-item">';
 				html += '<span class="plan-idx">#' + (g.id + 1) + '</span>';
-				html += '<span style="flex:1">' + escapeHtml(g.description) + '</span>';
+				html += '<div style="flex:1;min-width:0;">';
+				html += '<div>' + escapeHtml(g.description) + '</div>';
+				// Dependency/fallback tags
+				const tags = [];
+				if (g.depends_on && g.depends_on.length > 0) {
+					tags.push('<span class="plan-tag dep">depends: #' + g.depends_on.map(d => d + 1).join(', #') + '</span>');
+				}
+				if (g.fallback_goal_id != null) {
+					tags.push('<span class="plan-tag fallback">fallback → #' + (g.fallback_goal_id + 1) + '</span>');
+				}
+				if (g.on_failure && g.on_failure !== 'fail') {
+					tags.push('<span class="plan-tag failure">on_fail: ' + escapeHtml(g.on_failure) + '</span>');
+				}
+				if (g.on_captcha && g.on_captcha !== 'fail') {
+					tags.push('<span class="plan-tag captcha">captcha: ' + escapeHtml(g.on_captcha) + '</span>');
+				}
+				if (tags.length > 0) {
+					html += '<div class="plan-meta">' + tags.join('') + '</div>';
+				}
+				if (g.result && g.result !== 'success' && g.result !== '') {
+					html += '<div style="font-size:11px;color:var(--text-muted);margin-top:3px;">' + escapeHtml(g.result) + '</div>';
+				}
+				html += '</div>';
 				html += '<span class="plan-status ' + statusCls + '">' + statusLabel + '</span>';
 				html += '</div>';
 				return html;
