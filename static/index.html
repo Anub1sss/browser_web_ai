@@ -6,336 +6,1067 @@
 	<title>Task Hunter</title>
 	<link rel="preconnect" href="https://fonts.googleapis.com">
 	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-	<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 	<style>
 		:root {
-			--bg: #0d0f12;
-			--bg-card: #15181e;
-			--bg-input: #1a1e26;
-			--border: #2a303c;
-			--text: #e6edf3;
-			--text-muted: #8b949e;
-			--accent: #f59e0b;
-			--accent-dim: #d97706;
-			--success: #22c55e;
-			--error: #ef4444;
-			--warn: #eab308;
+			--bg: #f5f5f7;
+			--bg-white: #ffffff;
+			--bg-sidebar: #ffffff;
+			--border: #e5e7eb;
+			--border-light: #f0f0f2;
+			--text: #111827;
+			--text-secondary: #6b7280;
+			--text-muted: #9ca3af;
+			--accent: #111827;
+			--accent-hover: #1f2937;
+			--red: #ef4444;
+			--red-bg: #fef2f2;
+			--red-border: #fecaca;
+			--green: #22c55e;
+			--green-bg: #f0fdf4;
+			--green-border: #bbf7d0;
+			--amber: #f59e0b;
+			--amber-bg: #fffbeb;
+			--amber-border: #fde68a;
+			--blue: #3b82f6;
+			--blue-bg: #eff6ff;
 			--radius: 12px;
-			--shadow: 0 4px 24px rgba(0,0,0,0.4);
+			--radius-sm: 8px;
+			--shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+			--shadow: 0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06);
+			--shadow-md: 0 4px 6px rgba(0,0,0,0.07), 0 2px 4px rgba(0,0,0,0.06);
+			--transition: 150ms cubic-bezier(0.4, 0, 0.2, 1);
 		}
-		* { box-sizing: border-box; }
+		* { box-sizing: border-box; margin: 0; padding: 0; }
 		body {
-			margin: 0;
 			min-height: 100vh;
 			background: var(--bg);
-			background-image: radial-gradient(ellipse 80% 50% at 50% -20%, rgba(245,158,11,0.08), transparent);
 			color: var(--text);
-			font-family: 'Outfit', sans-serif;
-			font-size: 16px;
+			font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+			font-size: 14px;
 			line-height: 1.5;
+			-webkit-font-smoothing: antialiased;
 		}
-		.app { max-width: 720px; margin: 0 auto; padding: 2rem 1.5rem; }
-		header { margin-bottom: 2rem; text-align: center; }
-		h1 {
-			font-size: 1.75rem;
+
+		/* Layout */
+		.layout {
+			display: flex;
+			min-height: 100vh;
+		}
+
+		/* Sidebar */
+		.sidebar {
+			width: 260px;
+			background: var(--bg-white);
+			border-right: 1px solid var(--border);
+			display: flex;
+			flex-direction: column;
+			position: fixed;
+			top: 0;
+			left: 0;
+			bottom: 0;
+			z-index: 100;
+			overflow-y: auto;
+		}
+		.sidebar-brand {
+			padding: 20px 20px 16px;
+			border-bottom: 1px solid var(--border);
+			display: flex;
+			align-items: center;
+			gap: 10px;
+		}
+		.sidebar-brand-icon {
+			width: 32px;
+			height: 32px;
+			background: var(--accent);
+			border-radius: 8px;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+		}
+		.sidebar-brand-icon svg { width: 18px; height: 18px; color: #fff; }
+		.sidebar-brand-text {
 			font-weight: 700;
-			letter-spacing: -0.02em;
-			margin: 0 0 0.25rem 0;
-			background: linear-gradient(135deg, var(--text) 0%, var(--text-muted) 100%);
-			-webkit-background-clip: text;
-			-webkit-text-fill-color: transparent;
-			background-clip: text;
+			font-size: 15px;
+			color: var(--text);
 		}
-		.subtitle { color: var(--text-muted); font-size: 0.95rem; }
-		.card {
-			background: var(--bg-card);
-			border: 1px solid var(--border);
-			border-radius: var(--radius);
-			padding: 1.5rem;
-			margin-bottom: 1.5rem;
-			box-shadow: var(--shadow);
+		.sidebar-section {
+			padding: 16px 12px 8px;
 		}
-		.card h2 {
-			font-size: 1rem;
+		.sidebar-section-title {
+			font-size: 11px;
 			font-weight: 600;
 			color: var(--text-muted);
-			margin: 0 0 1rem 0;
 			text-transform: uppercase;
 			letter-spacing: 0.05em;
+			padding: 0 8px;
+			margin-bottom: 4px;
 		}
-		label { display: block; font-size: 0.875rem; color: var(--text-muted); margin-bottom: 0.35rem; }
-		textarea {
+		.sidebar-nav {
+			list-style: none;
+		}
+		.sidebar-nav li a,
+		.sidebar-nav li button {
+			display: flex;
+			align-items: center;
+			gap: 10px;
 			width: 100%;
-			min-height: 120px;
-			padding: 0.75rem 1rem;
-			background: var(--bg-input);
-			border: 1px solid var(--border);
-			border-radius: 8px;
-			color: var(--text);
-			font-family: 'JetBrains Mono', monospace;
-			font-size: 0.9rem;
-			resize: vertical;
-			transition: border-color 0.2s;
+			padding: 8px 12px;
+			border-radius: var(--radius-sm);
+			color: var(--text-secondary);
+			text-decoration: none;
+			font-size: 13.5px;
+			font-weight: 500;
+			border: none;
+			background: transparent;
+			cursor: pointer;
+			transition: all var(--transition);
+			text-align: left;
 		}
-		textarea:focus { outline: none; border-color: var(--accent); }
-		textarea::placeholder { color: var(--text-muted); opacity: 0.7; }
-		select, input[type="text"] {
-			width: 100%;
-			padding: 0.6rem 1rem;
-			background: var(--bg-input);
-			border: 1px solid var(--border);
-			border-radius: 8px;
+		.sidebar-nav li a:hover,
+		.sidebar-nav li button:hover {
+			background: var(--bg);
 			color: var(--text);
-			font-family: inherit;
-			font-size: 0.95rem;
 		}
-		select:focus, input:focus { outline: none; border-color: var(--accent); }
-		.row { display: flex; gap: 1rem; align-items: flex-end; flex-wrap: wrap; }
-		.row .field { flex: 1; min-width: 140px; }
+		.sidebar-nav li a.active,
+		.sidebar-nav li button.active {
+			background: var(--bg);
+			color: var(--text);
+			font-weight: 600;
+		}
+		.sidebar-nav li a svg,
+		.sidebar-nav li button svg {
+			width: 18px;
+			height: 18px;
+			flex-shrink: 0;
+			opacity: 0.6;
+		}
+		.sidebar-nav li a.active svg,
+		.sidebar-nav li button.active svg { opacity: 1; }
+		.sidebar-badge {
+			margin-left: auto;
+			font-size: 11px;
+			font-weight: 600;
+			padding: 1px 7px;
+			border-radius: 10px;
+			background: var(--red);
+			color: #fff;
+		}
+		.sidebar-bottom {
+			margin-top: auto;
+			padding: 16px;
+			border-top: 1px solid var(--border);
+			display: flex;
+			align-items: center;
+			gap: 10px;
+		}
+		.sidebar-avatar {
+			width: 32px;
+			height: 32px;
+			border-radius: 50%;
+			background: var(--bg);
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			font-weight: 600;
+			font-size: 13px;
+			color: var(--text-secondary);
+			flex-shrink: 0;
+		}
+		.sidebar-user-info {
+			flex: 1;
+			min-width: 0;
+		}
+		.sidebar-user-name {
+			font-weight: 600;
+			font-size: 13px;
+			color: var(--text);
+			overflow: hidden;
+			text-overflow: ellipsis;
+			white-space: nowrap;
+		}
+		.sidebar-user-role {
+			font-size: 12px;
+			color: var(--text-muted);
+		}
+
+		/* Main content */
+		.main {
+			flex: 1;
+			margin-left: 260px;
+			min-height: 100vh;
+		}
+
+		/* Top bar */
+		.topbar {
+			background: var(--bg-white);
+			border-bottom: 1px solid var(--border);
+			padding: 0 32px;
+			height: 52px;
+			display: flex;
+			align-items: center;
+			gap: 8px;
+			position: sticky;
+			top: 0;
+			z-index: 50;
+		}
+		.topbar-breadcrumb {
+			display: flex;
+			align-items: center;
+			gap: 6px;
+			font-size: 13px;
+			color: var(--text-secondary);
+		}
+		.topbar-breadcrumb span {
+			display: flex;
+			align-items: center;
+			gap: 4px;
+		}
+		.topbar-breadcrumb .bc-active {
+			color: var(--text);
+			font-weight: 600;
+		}
+		.topbar-breadcrumb .bc-sep {
+			color: var(--text-muted);
+			font-size: 10px;
+		}
+		.topbar-badge {
+			display: inline-flex;
+			align-items: center;
+			gap: 4px;
+			padding: 2px 10px;
+			border-radius: 6px;
+			font-size: 12px;
+			font-weight: 500;
+			background: var(--bg);
+			border: 1px solid var(--border);
+			color: var(--text-secondary);
+		}
+		.topbar-right {
+			margin-left: auto;
+			display: flex;
+			align-items: center;
+			gap: 8px;
+		}
+
+		/* Content area */
+		.content {
+			padding: 28px 32px;
+			max-width: 1200px;
+		}
+
+		/* Page header */
+		.page-header {
+			display: flex;
+			align-items: flex-start;
+			justify-content: space-between;
+			margin-bottom: 24px;
+		}
+		.page-header h1 {
+			font-size: 24px;
+			font-weight: 700;
+			color: var(--text);
+			letter-spacing: -0.02em;
+			margin-bottom: 4px;
+		}
+		.page-header p {
+			font-size: 14px;
+			color: var(--text-secondary);
+		}
+
+		/* Cards */
+		.card {
+			background: var(--bg-white);
+			border: 1px solid var(--border);
+			border-radius: var(--radius);
+			box-shadow: var(--shadow-sm);
+		}
+		.card-header {
+			padding: 20px 24px 0;
+		}
+		.card-header h2 {
+			font-size: 16px;
+			font-weight: 600;
+			color: var(--text);
+			margin-bottom: 2px;
+		}
+		.card-header p {
+			font-size: 13px;
+			color: var(--text-secondary);
+		}
+		.card-body {
+			padding: 20px 24px;
+		}
+
+		/* Stats grid */
+		.stats-grid {
+			display: grid;
+			grid-template-columns: repeat(4, 1fr);
+			gap: 16px;
+			margin-bottom: 24px;
+		}
+		.stat-card {
+			background: var(--bg-white);
+			border: 1px solid var(--border);
+			border-radius: var(--radius);
+			padding: 20px;
+			box-shadow: var(--shadow-sm);
+			display: flex;
+			align-items: flex-start;
+			justify-content: space-between;
+		}
+		.stat-card .stat-icon {
+			width: 36px;
+			height: 36px;
+			border-radius: 10px;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			flex-shrink: 0;
+		}
+		.stat-card .stat-icon svg { width: 18px; height: 18px; }
+		.stat-card .stat-icon.amber { background: var(--amber-bg); color: var(--amber); }
+		.stat-card .stat-icon.green { background: var(--green-bg); color: var(--green); }
+		.stat-card .stat-icon.red { background: var(--red-bg); color: var(--red); }
+		.stat-card .stat-icon.blue { background: var(--blue-bg); color: var(--blue); }
+		.stat-label {
+			font-size: 13px;
+			color: var(--text-secondary);
+			margin-bottom: 4px;
+		}
+		.stat-value {
+			font-size: 28px;
+			font-weight: 700;
+			color: var(--text);
+			letter-spacing: -0.02em;
+			line-height: 1.1;
+		}
+
+		/* Button styles */
 		.btn {
 			display: inline-flex;
 			align-items: center;
 			justify-content: center;
-			gap: 0.5rem;
-			padding: 0.75rem 1.25rem;
+			gap: 6px;
+			padding: 8px 16px;
 			font-family: inherit;
-			font-size: 0.95rem;
+			font-size: 13px;
 			font-weight: 600;
-			border: none;
-			border-radius: 8px;
+			border: 1px solid transparent;
+			border-radius: var(--radius-sm);
 			cursor: pointer;
-			transition: transform 0.1s, box-shadow 0.2s;
+			transition: all var(--transition);
+			white-space: nowrap;
 		}
 		.btn:active { transform: scale(0.98); }
+		.btn svg { width: 16px; height: 16px; }
 		.btn-primary {
-			background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dim) 100%);
-			color: #111;
+			background: var(--accent);
+			color: #fff;
+			border-color: var(--accent);
 		}
-		.btn-primary:hover { box-shadow: 0 0 20px rgba(245,158,11,0.3); }
-		.btn-primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
-		.btn-success { background: var(--success); color: #111; }
-		.btn-danger { background: var(--error); color: #fff; }
-		.status-box {
-			padding: 1rem;
-			border-radius: 8px;
-			font-size: 0.9rem;
-			margin-top: 1rem;
+		.btn-primary:hover { background: var(--accent-hover); }
+		.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+		.btn-secondary {
+			background: var(--bg-white);
+			color: var(--text);
+			border-color: var(--border);
 		}
-		.status-box.running { background: rgba(245,158,11,0.12); border: 1px solid rgba(245,158,11,0.3); color: var(--accent); }
-		.status-box.done { background: rgba(34,197,94,0.12); border: 1px solid rgba(34,197,94,0.3); color: var(--success); }
-		.status-box.error { background: rgba(239,68,68,0.12); border: 1px solid rgba(239,68,68,0.3); color: var(--error); }
-		.status-box .label { font-weight: 600; margin-bottom: 0.25rem; }
-		.pulse { animation: pulse 1.5s ease-in-out infinite; }
-		@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
-		/* Steps list */
-		.steps-list { margin-top: 0.5rem; }
-		.step-item {
-			background: var(--bg-input);
+		.btn-secondary:hover { background: var(--bg); }
+		.btn-danger {
+			background: var(--red);
+			color: #fff;
+			border-color: var(--red);
+		}
+		.btn-danger:hover { background: #dc2626; }
+		.btn-success {
+			background: var(--green);
+			color: #fff;
+			border-color: var(--green);
+		}
+		.btn-success:hover { background: #16a34a; }
+		.btn-lg {
+			padding: 10px 20px;
+			font-size: 14px;
+		}
+
+		/* Form elements */
+		.form-group { margin-bottom: 16px; }
+		.form-label {
+			display: block;
+			font-size: 13px;
+			font-weight: 500;
+			color: var(--text);
+			margin-bottom: 6px;
+		}
+		.form-label-muted {
+			color: var(--text-secondary);
+			font-weight: 400;
+		}
+		textarea,
+		select,
+		input[type="text"] {
+			width: 100%;
+			padding: 9px 12px;
+			background: var(--bg-white);
 			border: 1px solid var(--border);
-			border-radius: 8px;
-			padding: 0.75rem 1rem;
-			margin-bottom: 0.5rem;
-			font-size: 0.9rem;
+			border-radius: var(--radius-sm);
+			color: var(--text);
+			font-family: inherit;
+			font-size: 14px;
+			transition: border-color var(--transition), box-shadow var(--transition);
 		}
-		.step-item .step-num { color: var(--accent); font-weight: 600; margin-bottom: 0.25rem; }
-		.step-item .step-memory { color: var(--text-muted); margin-bottom: 0.25rem; }
-		.step-item .step-actions { font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; }
-		.step-item .step-goal { color: var(--text-muted); font-style: italic; margin-top: 0.25rem; }
-		.step-item .step-url { font-size: 0.8rem; color: var(--text-muted); margin-top: 0.25rem; }
-		/* Confirm destructive */
-		.confirm-box {
-			background: rgba(234,179,8,0.15);
-			border: 1px solid rgba(234,179,8,0.4);
-			border-radius: 8px;
-			padding: 1rem;
-			margin-top: 1rem;
-			color: var(--warn);
+		textarea {
+			font-family: 'JetBrains Mono', monospace;
+			font-size: 13px;
+			min-height: 100px;
+			resize: vertical;
 		}
-		.confirm-box .confirm-q { font-weight: 600; margin-bottom: 0.75rem; }
-		.confirm-box .confirm-btns { display: flex; gap: 0.5rem; }
-		footer { text-align: center; color: var(--text-muted); font-size: 0.8rem; margin-top: 2rem; }
+		textarea:focus, select:focus, input:focus {
+			outline: none;
+			border-color: var(--accent);
+			box-shadow: 0 0 0 3px rgba(17,24,39,0.08);
+		}
+		textarea::placeholder { color: var(--text-muted); }
+
+		/* Form row */
+		.form-row {
+			display: flex;
+			gap: 12px;
+			flex-wrap: wrap;
+		}
+		.form-row .form-field { flex: 1; min-width: 140px; }
+
+		/* Toggle / Checkbox */
+		.toggle-row {
+			display: flex;
+			gap: 20px;
+			flex-wrap: wrap;
+			margin-bottom: 16px;
+		}
 		.toggle-label {
 			display: flex;
 			align-items: center;
-			gap: 0.5rem;
-			font-size: 0.9rem;
+			gap: 8px;
+			font-size: 13px;
+			font-weight: 500;
+			color: var(--text);
 			cursor: pointer;
 			user-select: none;
 		}
 		.toggle-label input[type="checkbox"] {
-			width: 18px;
-			height: 18px;
+			width: 16px;
+			height: 16px;
 			accent-color: var(--accent);
 			cursor: pointer;
+			border-radius: 4px;
 		}
-		.plan-item {
-			background: var(--bg-input);
+
+		/* Section divider */
+		.section-gap { margin-bottom: 24px; }
+
+		/* Status indicators */
+		.status-dot {
+			width: 8px;
+			height: 8px;
+			border-radius: 50%;
+			display: inline-block;
+			flex-shrink: 0;
+		}
+		.status-dot.green { background: var(--green); }
+		.status-dot.amber { background: var(--amber); }
+		.status-dot.red { background: var(--red); }
+
+		/* Status box */
+		.status-box {
+			padding: 14px 16px;
+			border-radius: var(--radius-sm);
+			font-size: 13px;
+			margin-top: 16px;
+			display: flex;
+			align-items: flex-start;
+			gap: 10px;
+		}
+		.status-box .status-icon {
+			width: 20px;
+			height: 20px;
+			flex-shrink: 0;
+			margin-top: 1px;
+		}
+		.status-box.running {
+			background: var(--amber-bg);
+			border: 1px solid var(--amber-border);
+			color: #92400e;
+		}
+		.status-box.done {
+			background: var(--green-bg);
+			border: 1px solid var(--green-border);
+			color: #166534;
+		}
+		.status-box.error {
+			background: var(--red-bg);
+			border: 1px solid var(--red-border);
+			color: #991b1b;
+		}
+		.status-box .status-label { font-weight: 600; }
+		.pulse { animation: pulse 1.5s ease-in-out infinite; }
+		@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+		/* Step items */
+		.step-item {
+			padding: 14px 16px;
 			border: 1px solid var(--border);
-			border-radius: 8px;
-			padding: 0.6rem 1rem;
-			margin-bottom: 0.4rem;
-			font-size: 0.9rem;
+			border-radius: var(--radius-sm);
+			margin-bottom: 8px;
+			background: var(--bg-white);
+		}
+		.step-item .step-num {
+			font-size: 12px;
+			font-weight: 600;
+			color: var(--accent);
+			margin-bottom: 4px;
+		}
+		.step-item .step-memory {
+			font-size: 13px;
+			color: var(--text-secondary);
+			margin-bottom: 4px;
+		}
+		.step-item .step-actions {
+			font-family: 'JetBrains Mono', monospace;
+			font-size: 12px;
+			color: var(--text);
+			background: var(--bg);
+			padding: 6px 10px;
+			border-radius: 6px;
+			margin-top: 6px;
+		}
+		.step-item .step-goal {
+			font-size: 12px;
+			color: var(--text-muted);
+			font-style: italic;
+			margin-top: 4px;
+		}
+		.step-item .step-url {
+			font-size: 11px;
+			color: var(--text-muted);
+			margin-top: 4px;
+			word-break: break-all;
+		}
+
+		/* Plan items */
+		.plan-item {
+			padding: 10px 14px;
+			border: 1px solid var(--border);
+			border-radius: var(--radius-sm);
+			margin-bottom: 6px;
 			display: flex;
 			align-items: center;
-			gap: 0.75rem;
+			gap: 10px;
+			background: var(--bg-white);
 		}
-		.plan-item .plan-idx { color: var(--accent); font-weight: 600; min-width: 28px; }
-		.plan-item .plan-status {
-			font-size: 0.8rem;
+		.plan-item .plan-idx {
+			font-size: 12px;
+			font-weight: 700;
+			color: var(--text-muted);
+			min-width: 28px;
+		}
+		.plan-item span { font-size: 13px; }
+		.plan-status {
+			font-size: 11px;
 			padding: 2px 8px;
-			border-radius: 4px;
+			border-radius: 6px;
 			font-weight: 600;
+			white-space: nowrap;
 		}
-		.plan-status.pending { background: rgba(139,148,158,0.2); color: var(--text-muted); }
-		.plan-status.executing { background: rgba(245,158,11,0.2); color: var(--accent); }
-		.plan-status.done { background: rgba(34,197,94,0.2); color: var(--success); }
-		.plan-status.failed { background: rgba(239,68,68,0.2); color: var(--error); }
-		.plan-status.skipped { background: rgba(139,148,158,0.15); color: var(--text-muted); }
+		.plan-status.pending { background: var(--bg); color: var(--text-muted); }
+		.plan-status.executing { background: var(--amber-bg); color: #92400e; }
+		.plan-status.done { background: var(--green-bg); color: #166534; }
+		.plan-status.failed { background: var(--red-bg); color: #991b1b; }
+		.plan-status.skipped { background: var(--bg); color: var(--text-muted); }
+
+		/* Confirm box */
+		.confirm-box {
+			background: var(--amber-bg);
+			border: 1px solid var(--amber-border);
+			border-radius: var(--radius-sm);
+			padding: 16px;
+			margin-top: 16px;
+			color: #92400e;
+		}
+		.confirm-box .confirm-q { font-weight: 600; margin-bottom: 10px; font-size: 14px; }
+		.confirm-box .confirm-btns { display: flex; gap: 8px; }
+
+		/* Memory items */
 		.memory-item {
-			background: var(--bg-input);
+			padding: 12px 16px;
 			border: 1px solid var(--border);
-			border-radius: 8px;
-			padding: 0.6rem 1rem;
-			margin-bottom: 0.4rem;
-			font-size: 0.85rem;
+			border-radius: var(--radius-sm);
+			margin-bottom: 6px;
+			display: flex;
+			align-items: center;
+			gap: 10px;
+			background: var(--bg-white);
 		}
-		.memory-item .mem-task { color: var(--text); font-weight: 500; }
-		.memory-item .mem-state { font-size: 0.8rem; margin-left: 0.5rem; }
-		.memory-item .mem-time { color: var(--text-muted); font-size: 0.75rem; }
+		.memory-item .mem-task {
+			font-size: 13px;
+			font-weight: 500;
+			color: var(--text);
+			flex: 1;
+		}
+		.memory-item .mem-state {
+			font-size: 11px;
+			font-weight: 600;
+			padding: 2px 8px;
+			border-radius: 6px;
+		}
+		.memory-item .mem-state.done { background: var(--green-bg); color: #166534; }
+		.memory-item .mem-state.failed { background: var(--red-bg); color: #991b1b; }
+		.memory-item .mem-state.executing { background: var(--amber-bg); color: #92400e; }
+		.memory-item .mem-time {
+			font-size: 12px;
+			color: var(--text-muted);
+		}
+
+		/* Empty state */
+		.empty-state {
+			text-align: center;
+			padding: 40px 20px;
+			color: var(--text-muted);
+		}
+		.empty-state svg {
+			width: 48px;
+			height: 48px;
+			margin-bottom: 12px;
+			opacity: 0.4;
+		}
+		.empty-state p { font-size: 13px; }
+
+		/* Sections */
+		.section-title {
+			font-size: 11px;
+			font-weight: 600;
+			text-transform: uppercase;
+			letter-spacing: 0.05em;
+			color: var(--text-muted);
+			margin-bottom: 12px;
+		}
+
+		/* Responsive sidebar toggle */
+		.sidebar-toggle {
+			display: none;
+			position: fixed;
+			top: 12px;
+			left: 12px;
+			z-index: 200;
+			width: 36px;
+			height: 36px;
+			border-radius: var(--radius-sm);
+			background: var(--bg-white);
+			border: 1px solid var(--border);
+			cursor: pointer;
+			align-items: center;
+			justify-content: center;
+			box-shadow: var(--shadow);
+		}
+		.sidebar-toggle svg { width: 18px; height: 18px; color: var(--text); }
+		.sidebar-overlay {
+			display: none;
+			position: fixed;
+			inset: 0;
+			background: rgba(0,0,0,0.3);
+			z-index: 90;
+		}
+
+		@media (max-width: 768px) {
+			.sidebar { transform: translateX(-100%); transition: transform 0.2s ease; }
+			.sidebar.open { transform: translateX(0); }
+			.sidebar-toggle { display: flex; }
+			.sidebar-overlay.show { display: block; }
+			.main { margin-left: 0; }
+			.content { padding: 20px 16px; }
+			.topbar { padding: 0 16px; padding-left: 52px; }
+			.stats-grid { grid-template-columns: repeat(2, 1fr); }
+		}
+
+		/* View transitions */
+		.view { display: none; }
+		.view.active { display: block; }
+
+		/* Scrollbar */
+		::-webkit-scrollbar { width: 6px; }
+		::-webkit-scrollbar-track { background: transparent; }
+		::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+		::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
 	</style>
 </head>
 <body>
-	<div class="app">
-		<header>
-			<h1>Task Hunter</h1>
-			<p class="subtitle">Автономный браузерный агент — введите задачу на естественном языке</p>
-		</header>
+	<!-- Sidebar Toggle (mobile) -->
+	<button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle sidebar">
+		<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
+	</button>
+	<div class="sidebar-overlay" id="sidebarOverlay"></div>
 
-		<div class="card">
-			<h2>Запуск задачи</h2>
-			<div style="margin-bottom: 1rem;">
-				<label for="task">Задача</label>
-				<textarea id="task" placeholder="Например: открой google.com и найди погоду в Москве"></textarea>
-			</div>
-			<div class="row">
-				<div class="field">
-					<label for="profile">Профиль</label>
-					<select id="profile"></select>
+	<div class="layout">
+		<!-- Sidebar -->
+		<aside class="sidebar" id="sidebar">
+			<div class="sidebar-brand">
+				<div class="sidebar-brand-icon">
+					<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
 				</div>
-				<div class="field">
-					<label for="provider">Провайдер</label>
-					<select id="provider">
-						<option value="">Из профиля</option>
-						<option value="custom">Browser AI</option>
-						<option value="openai">OpenAI</option>
-						<option value="glm">GLM</option>
-					</select>
-				</div>
-				<div class="field">
-					<label for="model">Модель</label>
-					<select id="model">
-						<option value="">По умолчанию</option>
-					</select>
-				</div>
-				<button type="button" class="btn btn-primary" id="runBtn">Запустить</button>
-			</div>
-			<div class="row" style="margin-top: 1rem;">
-				<div class="field">
-					<label for="browserBackend">Бэкенд браузера</label>
-					<select id="browserBackend">
-						<option value="">Из профиля</option>
-						<option value="cdp">CDP — только Chromium</option>
-						<option value="playwright" selected>Playwright — выбор браузера ниже</option>
-					</select>
-				</div>
-				<div class="field" id="playwrightBrowserWrap">
-					<label for="playwrightBrowser">Какой браузер запускать <span id="playwrightBrowserHint" style="color: var(--text-muted); font-size: 0.85rem;">(при Playwright)</span></label>
-					<select id="playwrightBrowser">
-						<option value="chromium">Chromium</option>
-						<option value="firefox">Firefox</option>
-						<option value="webkit">WebKit (Safari)</option>
-					</select>
-					<small id="playwrightBrowserNote" style="display:none; color: var(--text-muted); font-size: 0.8rem;">Сейчас запустится выбранный браузер</small>
+				<div>
+					<div class="sidebar-brand-text">Task Hunter</div>
+					<div style="font-size: 11px; color: var(--text-muted);">Browser AI Agent</div>
 				</div>
 			</div>
-			<div id="statusBox" class="status-box" style="display: none;"></div>
-			<div id="confirmBox" class="confirm-box" style="display: none;">
-				<div class="confirm-q" id="confirmQuestion"></div>
-				<div class="confirm-btns">
-					<button type="button" class="btn btn-success" id="confirmYes">Да</button>
-					<button type="button" class="btn btn-danger" id="confirmNo">Нет</button>
-				</div>
-			</div>
-		</div>
 
-		<!-- Orchestrator Options -->
-		<div class="card" id="orchestratorCard">
-			<h2>Оркестратор</h2>
-			<div class="row" style="margin-bottom: 1rem;">
-				<div class="field">
-					<label class="toggle-label">
-						<input type="checkbox" id="enablePlanner"> Planner (декомпозиция задачи на подцели)
-					</label>
+			<div class="sidebar-section">
+				<div class="sidebar-section-title">Main</div>
+				<ul class="sidebar-nav">
+					<li>
+						<button class="active" onclick="switchView('dashboard')">
+							<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+							Dashboard
+						</button>
+					</li>
+					<li>
+						<button onclick="switchView('task')">
+							<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+							Run Task
+						</button>
+					</li>
+					<li>
+						<button onclick="switchView('orchestrator')">
+							<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+							Orchestrator
+						</button>
+					</li>
+				</ul>
+			</div>
+
+			<div class="sidebar-section">
+				<div class="sidebar-section-title">Execution</div>
+				<ul class="sidebar-nav">
+					<li>
+						<button onclick="switchView('steps')">
+							<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
+							Steps & Actions
+						</button>
+					</li>
+					<li>
+						<button onclick="switchView('plan')">
+							<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+							Plan
+						</button>
+					</li>
+					<li>
+						<button onclick="switchView('memory')">
+							<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"/></svg>
+							Memory
+						</button>
+					</li>
+				</ul>
+			</div>
+
+			<div class="sidebar-bottom">
+				<div class="sidebar-avatar">TH</div>
+				<div class="sidebar-user-info">
+					<div class="sidebar-user-name">Task Hunter</div>
+					<div class="sidebar-user-role">v1.0 Agent</div>
 				</div>
-				<div class="field">
-					<label class="toggle-label">
-						<input type="checkbox" id="enableValidator"> Validator (проверка каждого подшага)
-					</label>
+				<button style="background:none;border:none;cursor:pointer;color:var(--text-muted);padding:4px;" title="Settings">
+					<svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+				</button>
+			</div>
+		</aside>
+
+		<!-- Main Content -->
+		<div class="main">
+			<!-- Top Bar -->
+			<div class="topbar">
+				<div class="topbar-breadcrumb">
+					<span>
+						<svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+						Task Hunter
+					</span>
+					<span class="bc-sep">/</span>
+					<span class="topbar-badge" id="profileBadge">
+						<span class="status-dot green"></span>
+						<span id="currentProfileLabel">default</span>
+					</span>
+					<span class="bc-sep">/</span>
+					<span class="bc-active" id="currentPageLabel">Dashboard</span>
 				</div>
-				<div class="field">
-					<label class="toggle-label">
-						<input type="checkbox" id="enableMemory" checked> Memory (сохранять результаты)
-					</label>
+				<div class="topbar-right">
+					<button class="btn btn-primary btn-lg" id="runBtnTop" onclick="switchView('task')">
+						<svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+						New Task
+					</button>
 				</div>
 			</div>
-			<div class="row" style="margin-bottom: 1rem;">
-				<div class="field">
-					<label for="geoCountry">Geo-proxy (страна)</label>
-					<select id="geoCountry">
-						<option value="">Нет</option>
-					</select>
+
+			<!-- DASHBOARD VIEW -->
+			<div class="content view active" id="view-dashboard">
+				<div class="page-header">
+					<div>
+						<h1>Dashboard</h1>
+						<p>Overview of your browser AI agent activity</p>
+					</div>
 				</div>
-				<div class="field">
-					<label for="gologinProfileId">GoLogin Profile ID</label>
-					<input type="text" id="gologinProfileId" placeholder="Оставить пустым если не нужен">
+
+				<div class="stats-grid">
+					<div class="stat-card">
+						<div>
+							<div class="stat-label">Total Tasks</div>
+							<div class="stat-value" id="statTotalTasks">0</div>
+						</div>
+						<div class="stat-icon blue">
+							<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+						</div>
+					</div>
+					<div class="stat-card">
+						<div>
+							<div class="stat-label">Completed</div>
+							<div class="stat-value" id="statCompleted">0</div>
+						</div>
+						<div class="stat-icon green">
+							<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+						</div>
+					</div>
+					<div class="stat-card">
+						<div>
+							<div class="stat-label">Failed</div>
+							<div class="stat-value" id="statFailed">0</div>
+						</div>
+						<div class="stat-icon red">
+							<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+						</div>
+					</div>
+					<div class="stat-card">
+						<div>
+							<div class="stat-label">Profiles</div>
+							<div class="stat-value" id="statProfiles">0</div>
+						</div>
+						<div class="stat-icon amber">
+							<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+						</div>
+					</div>
+				</div>
+
+				<!-- Recent Tasks -->
+				<div class="card section-gap">
+					<div class="card-header">
+						<h2>Recent Tasks</h2>
+						<p>Track your recent task executions</p>
+					</div>
+					<div class="card-body" id="dashboardMemoryList">
+						<div class="empty-state">
+							<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/></svg>
+							<p>No tasks yet. Run a task to get started.</p>
+						</div>
+					</div>
+				</div>
+
+				<!-- Profiles Overview -->
+				<div class="card">
+					<div class="card-header">
+						<h2>Profiles</h2>
+						<p>Your configured browser profiles</p>
+					</div>
+					<div class="card-body" id="dashboardProfilesList">
+						<div style="color: var(--text-muted); font-size: 13px;">Loading profiles...</div>
+					</div>
 				</div>
 			</div>
-			<div class="row">
-				<div class="field">
-					<label for="maxSteps">Макс. шагов на подцель</label>
-					<input type="text" id="maxSteps" value="25" style="width: 80px;">
+
+			<!-- TASK VIEW -->
+			<div class="content view" id="view-task">
+				<div class="page-header">
+					<div>
+						<h1>Run Task</h1>
+						<p>Enter a task in natural language for the browser agent to execute</p>
+					</div>
 				</div>
-				<div class="field">
-					<label for="maxRetries">Повторов при ошибке</label>
-					<input type="text" id="maxRetries" value="2" style="width: 80px;">
+
+				<div class="card section-gap">
+					<div class="card-body">
+						<div class="form-group">
+							<label class="form-label" for="task">Task Description</label>
+							<textarea id="task" placeholder="e.g. Open google.com and search for weather in Moscow"></textarea>
+						</div>
+						<div class="form-row" style="margin-bottom: 16px;">
+							<div class="form-field">
+								<label class="form-label" for="profile">Profile</label>
+								<select id="profile"></select>
+							</div>
+							<div class="form-field">
+								<label class="form-label" for="provider">Provider</label>
+								<select id="provider">
+									<option value="">From profile</option>
+									<option value="custom">Browser AI</option>
+									<option value="openai">OpenAI</option>
+									<option value="glm">GLM</option>
+								</select>
+							</div>
+							<div class="form-field">
+								<label class="form-label" for="model">Model</label>
+								<select id="model">
+									<option value="">Default</option>
+								</select>
+							</div>
+						</div>
+						<div class="form-row" style="margin-bottom: 20px;">
+							<div class="form-field">
+								<label class="form-label" for="browserBackend">Browser Backend</label>
+								<select id="browserBackend">
+									<option value="">From profile</option>
+									<option value="cdp">CDP (Chromium only)</option>
+									<option value="playwright" selected>Playwright</option>
+								</select>
+							</div>
+							<div class="form-field" id="playwrightBrowserWrap">
+								<label class="form-label" for="playwrightBrowser">Browser <span class="form-label-muted" id="playwrightBrowserHint">(Playwright)</span></label>
+								<select id="playwrightBrowser">
+									<option value="chromium">Chromium</option>
+									<option value="firefox">Firefox</option>
+									<option value="webkit">WebKit (Safari)</option>
+								</select>
+							</div>
+						</div>
+						<button type="button" class="btn btn-primary btn-lg" id="runBtn" style="width:100%;">
+							<svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+							Run Task
+						</button>
+						<div id="statusBox" class="status-box" style="display: none;"></div>
+						<div id="confirmBox" class="confirm-box" style="display: none;">
+							<div class="confirm-q" id="confirmQuestion"></div>
+							<div class="confirm-btns">
+								<button type="button" class="btn btn-success" id="confirmYes">Yes</button>
+								<button type="button" class="btn btn-danger" id="confirmNo">No</button>
+							</div>
+						</div>
+					</div>
 				</div>
 			</div>
-		</div>
 
-		<!-- Plan display -->
-		<div class="card" id="planCard" style="display: none;">
-			<h2>План (подцели)</h2>
-			<div id="planList" class="steps-list"></div>
-		</div>
+			<!-- ORCHESTRATOR VIEW -->
+			<div class="content view" id="view-orchestrator">
+				<div class="page-header">
+					<div>
+						<h1>Orchestrator</h1>
+						<p>Configure planner, validator, memory, and session options</p>
+					</div>
+				</div>
 
-		<div class="card">
-			<h2>Шаги и действия</h2>
-			<div id="stepsList" class="steps-list"></div>
-		</div>
+				<div class="card section-gap">
+					<div class="card-header">
+						<h2>Task Decomposition</h2>
+						<p>Enable planner and validator for complex tasks</p>
+					</div>
+					<div class="card-body">
+						<div class="toggle-row">
+							<label class="toggle-label">
+								<input type="checkbox" id="enablePlanner"> Planner (task decomposition)
+							</label>
+							<label class="toggle-label">
+								<input type="checkbox" id="enableValidator"> Validator (step verification)
+							</label>
+							<label class="toggle-label">
+								<input type="checkbox" id="enableMemory" checked> Memory (save results)
+							</label>
+						</div>
+						<div class="form-row">
+							<div class="form-field">
+								<label class="form-label" for="maxSteps">Max steps per sub-goal</label>
+								<input type="text" id="maxSteps" value="25" style="width: 100px;">
+							</div>
+							<div class="form-field">
+								<label class="form-label" for="maxRetries">Retries on error</label>
+								<input type="text" id="maxRetries" value="2" style="width: 100px;">
+							</div>
+						</div>
+					</div>
+				</div>
 
-		<!-- Memory panel -->
-		<div class="card" id="memoryCard">
-			<h2>Память (последние задачи)</h2>
-			<div id="memoryList" class="steps-list">
-				<div style="color: var(--text-muted); font-size: 0.9rem;">Загрузка...</div>
+				<div class="card">
+					<div class="card-header">
+						<h2>Session Settings</h2>
+						<p>Geo-proxy and GoLogin integration</p>
+					</div>
+					<div class="card-body">
+						<div class="form-row">
+							<div class="form-field">
+								<label class="form-label" for="geoCountry">Geo-proxy (country)</label>
+								<select id="geoCountry">
+									<option value="">None</option>
+								</select>
+							</div>
+							<div class="form-field">
+								<label class="form-label" for="gologinProfileId">GoLogin Profile ID</label>
+								<input type="text" id="gologinProfileId" placeholder="Leave empty if not needed">
+							</div>
+						</div>
+					</div>
+				</div>
 			</div>
-		</div>
 
-		<footer>Task Hunter · Browser AI Agent · Orchestrator</footer>
-	</div>
+			<!-- STEPS VIEW -->
+			<div class="content view" id="view-steps">
+				<div class="page-header">
+					<div>
+						<h1>Steps & Actions</h1>
+						<p>Detailed view of each execution step</p>
+					</div>
+				</div>
+				<div class="card">
+					<div class="card-body" id="stepsList">
+						<div class="empty-state">
+							<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
+							<p>No steps yet. Run a task to see execution details.</p>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- PLAN VIEW -->
+			<div class="content view" id="view-plan">
+				<div class="page-header">
+					<div>
+						<h1>Execution Plan</h1>
+						<p>Sub-goals decomposition for the current task</p>
+					</div>
+				</div>
+				<div class="card">
+					<div class="card-body" id="planList">
+						<div class="empty-state">
+							<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+							<p>No plan yet. Enable the planner and run a task.</p>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- MEMORY VIEW -->
+			<div class="content view" id="view-memory">
+				<div class="page-header">
+					<div>
+						<h1>Memory</h1>
+						<p>Recent tasks and saved results</p>
+					</div>
+				</div>
+				<div class="card">
+					<div class="card-body" id="memoryList">
+						<div style="color: var(--text-muted); font-size: 13px;">Loading...</div>
+					</div>
+				</div>
+			</div>
+
+		</div><!-- /main -->
+	</div><!-- /layout -->
 
 	<script>
 		const API = '';
+
+		// --- Utilities ---
 		async function get(url) {
 			const r = await fetch(API + url);
 			if (!r.ok) throw new Error(await r.text());
@@ -350,7 +1081,53 @@
 			if (!r.ok) throw new Error(await r.text());
 			return r.json();
 		}
+		function escapeHtml(str) {
+			const div = document.createElement('div');
+			div.textContent = str;
+			return div.innerHTML;
+		}
 
+		// --- View switching ---
+		function switchView(view) {
+			document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+			const el = document.getElementById('view-' + view);
+			if (el) el.classList.add('active');
+
+			// Update sidebar active state
+			document.querySelectorAll('.sidebar-nav button').forEach(b => b.classList.remove('active'));
+			document.querySelectorAll('.sidebar-nav button').forEach(b => {
+				if (b.getAttribute('onclick') === "switchView('" + view + "')") {
+					b.classList.add('active');
+				}
+			});
+
+			// Update breadcrumb
+			const labels = {
+				dashboard: 'Dashboard',
+				task: 'Run Task',
+				orchestrator: 'Orchestrator',
+				steps: 'Steps & Actions',
+				plan: 'Plan',
+				memory: 'Memory'
+			};
+			document.getElementById('currentPageLabel').textContent = labels[view] || view;
+
+			// Close mobile sidebar
+			document.getElementById('sidebar').classList.remove('open');
+			document.getElementById('sidebarOverlay').classList.remove('show');
+		}
+
+		// Mobile sidebar
+		document.getElementById('sidebarToggle').addEventListener('click', () => {
+			document.getElementById('sidebar').classList.toggle('open');
+			document.getElementById('sidebarOverlay').classList.toggle('show');
+		});
+		document.getElementById('sidebarOverlay').addEventListener('click', () => {
+			document.getElementById('sidebar').classList.remove('open');
+			document.getElementById('sidebarOverlay').classList.remove('show');
+		});
+
+		// --- DOM references ---
 		const profileSelect = document.getElementById('profile');
 		const providerSelect = document.getElementById('provider');
 		const modelSelect = document.getElementById('model');
@@ -358,20 +1135,37 @@
 		const browserBackendSelect = document.getElementById('browserBackend');
 		const playwrightBrowserSelect = document.getElementById('playwrightBrowser');
 		const playwrightBrowserWrap = document.getElementById('playwrightBrowserWrap');
+		const runBtn = document.getElementById('runBtn');
+		const statusBox = document.getElementById('statusBox');
+		const stepsList = document.getElementById('stepsList');
+		const confirmBox = document.getElementById('confirmBox');
+		const confirmQuestion = document.getElementById('confirmQuestion');
+		const confirmYes = document.getElementById('confirmYes');
+		const confirmNo = document.getElementById('confirmNo');
+		const enablePlanner = document.getElementById('enablePlanner');
+		const enableValidator = document.getElementById('enableValidator');
+		const enableMemory = document.getElementById('enableMemory');
+		const geoCountrySelect = document.getElementById('geoCountry');
+		const gologinProfileId = document.getElementById('gologinProfileId');
+		const maxStepsInput = document.getElementById('maxSteps');
+		const maxRetriesInput = document.getElementById('maxRetries');
+		const planList = document.getElementById('planList');
+		const memoryList = document.getElementById('memoryList');
 
+		// --- Model options ---
 		const MODELS_BY_PROVIDER = {
 			custom: [
-				{ value: '', label: 'По умолчанию (bu-latest)' },
+				{ value: '', label: 'Default (bu-latest)' },
 				{ value: 'bu-latest', label: 'bu-latest' }
 			],
 			openai: [
-				{ value: '', label: 'По умолчанию (gpt-4o)' },
+				{ value: '', label: 'Default (gpt-4o)' },
 				{ value: 'gpt-4o', label: 'gpt-4o' },
 				{ value: 'gpt-4o-mini', label: 'gpt-4o-mini' },
 				{ value: 'gpt-4-turbo', label: 'gpt-4-turbo' }
 			],
 			glm: [
-				{ value: '', label: 'По умолчанию (GLM-4.6V-Flash)' },
+				{ value: '', label: 'Default (GLM-4.6V-Flash)' },
 				{ value: 'GLM-4.6V-Flash', label: 'GLM-4.6V-Flash' }
 			]
 		};
@@ -380,10 +1174,10 @@
 			const provider = providerSelect.value;
 			modelSelect.innerHTML = '';
 			if (!provider) {
-				modelSelect.innerHTML = '<option value="">По умолчанию</option>';
+				modelSelect.innerHTML = '<option value="">Default</option>';
 				return;
 			}
-			const options = MODELS_BY_PROVIDER[provider] || [{ value: '', label: 'По умолчанию' }];
+			const options = MODELS_BY_PROVIDER[provider] || [{ value: '', label: 'Default' }];
 			options.forEach(opt => {
 				const o = document.createElement('option');
 				o.value = opt.value;
@@ -391,17 +1185,11 @@
 				modelSelect.appendChild(o);
 			});
 		}
-		const runBtn = document.getElementById('runBtn');
-		const statusBox = document.getElementById('statusBox');
-		const stepsList = document.getElementById('stepsList');
-		const confirmBox = document.getElementById('confirmBox');
-		const confirmQuestion = document.getElementById('confirmQuestion');
-		const confirmYes = document.getElementById('confirmYes');
-		const confirmNo = document.getElementById('confirmNo');
 
+		// --- Render functions ---
 		function renderSteps(steps) {
 			if (!steps || steps.length === 0) {
-				stepsList.innerHTML = '<div style="color: var(--text-muted); font-size: 0.9rem;">Пока нет шагов. Запустите задачу.</div>';
+				stepsList.innerHTML = '<div class="empty-state"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg><p>No steps yet. Run a task to see execution details.</p></div>';
 				return;
 			}
 			stepsList.innerHTML = steps.map(s => {
@@ -410,124 +1198,24 @@
 					return a.name + p;
 				}).join(', ');
 				let html = '<div class="step-item">';
-				html += '<div class="step-num">Шаг ' + s.step_number + '</div>';
+				html += '<div class="step-num">Step ' + s.step_number + '</div>';
 				if (s.memory) html += '<div class="step-memory">' + escapeHtml(s.memory) + '</div>';
 				if (actionsStr) html += '<div class="step-actions">' + escapeHtml(actionsStr) + '</div>';
-				if (s.next_goal) html += '<div class="step-goal">Цель: ' + escapeHtml(s.next_goal) + '</div>';
+				if (s.next_goal) html += '<div class="step-goal">Goal: ' + escapeHtml(s.next_goal) + '</div>';
 				if (s.url) html += '<div class="step-url">' + escapeHtml(s.url) + '</div>';
 				html += '</div>';
 				return html;
 			}).join('');
 		}
 
-		function escapeHtml(str) {
-			const div = document.createElement('div');
-			div.textContent = str;
-			return div.innerHTML;
-		}
-
-		function showStatus(cls, label, message) {
-			statusBox.style.display = 'block';
-			statusBox.className = 'status-box ' + cls;
-			statusBox.innerHTML = '<div class="label">' + escapeHtml(label) + '</div><div>' + escapeHtml(message || '') + '</div>';
-		}
-
-		function showConfirm(question, taskId, onResolve) {
-			confirmQuestion.textContent = question;
-			confirmBox.style.display = 'block';
-			confirmYes.onclick = () => sendConfirm(taskId, 'yes', onResolve);
-			confirmNo.onclick = () => sendConfirm(taskId, 'no', onResolve);
-		}
-
-		function hideConfirm() {
-			confirmBox.style.display = 'none';
-			confirmYes.onclick = null;
-			confirmNo.onclick = null;
-		}
-
-		async function sendConfirm(taskId, answer, onResolve) {
-			try {
-				await post('/api/run/' + taskId + '/confirm', { answer });
-				hideConfirm();
-				onResolve();
-			} catch (e) {
-				statusBox.innerHTML = '<div class="label">Ошибка</div><div>' + escapeHtml(e.message) + '</div>';
-			}
-		}
-
-		let pollAborted = false;
-		async function pollStatus(taskId) {
-			pollAborted = false;
-			const maxAttempts = 600;
-			for (let i = 0; i < maxAttempts && !pollAborted; i++) {
-				const s = await get('/api/run/' + taskId);
-				renderSteps(s.steps || []);
-
-				// Render orchestrator plan if available
-				if (s.orchestrator && s.orchestrator.enabled && s.orchestrator.plan && s.orchestrator.plan.length > 0) {
-					renderPlan(s.orchestrator.plan);
-					const orchState = s.orchestrator.state || '';
-					const stateLabels = {idle:'Инициализация', planning:'Планирование…', executing:'Выполнение', validating:'Валидация…', done:'Готово', failed:'Ошибка'};
-					const stateLabel = stateLabels[orchState] || orchState;
-					if (orchState === 'planning') {
-						showStatus('running', 'Оркестратор: ' + stateLabel, 'Декомпозиция задачи на подцели…');
-					} else if (orchState === 'validating') {
-						showStatus('running', 'Оркестратор: ' + stateLabel, 'Проверка результата подшага…');
-					}
-				}
-
-				if (s.pending_confirm && s.pending_confirm.question) {
-					showStatus('running', 'Требуется подтверждение', 'Ответьте на вопрос ниже.');
-					await new Promise(resolve => {
-						showConfirm(s.pending_confirm.question, taskId, resolve);
-					});
-					continue;
-				}
-
-				if (s.status === 'done') {
-					showStatus('done', 'Готово', s.message || 'Задача выполнена.');
-					runBtn.disabled = false;
-					hideConfirm();
-					loadMemory();
-					return;
-				}
-				if (s.status === 'error') {
-					showStatus('error', 'Ошибка', s.message || 'Выполнение не удалось.');
-					runBtn.disabled = false;
-					hideConfirm();
-					loadMemory();
-					return;
-				}
-				showStatus('running', 'Выполняется…', (s.message || 'Ожидание…'));
-				const last = statusBox.querySelector('div:last-child');
-				if (last) last.classList.add('pulse');
-				await new Promise(r => setTimeout(r, 1500));
-			}
-			showStatus('error', 'Таймаут', 'Превышено время ожидания.');
-			runBtn.disabled = false;
-		}
-
-		// Orchestrator elements
-		const enablePlanner = document.getElementById('enablePlanner');
-		const enableValidator = document.getElementById('enableValidator');
-		const enableMemory = document.getElementById('enableMemory');
-		const geoCountrySelect = document.getElementById('geoCountry');
-		const gologinProfileId = document.getElementById('gologinProfileId');
-		const maxStepsInput = document.getElementById('maxSteps');
-		const maxRetriesInput = document.getElementById('maxRetries');
-		const planCard = document.getElementById('planCard');
-		const planList = document.getElementById('planList');
-		const memoryList = document.getElementById('memoryList');
-
 		function renderPlan(plan) {
 			if (!plan || plan.length === 0) {
-				planCard.style.display = 'none';
+				planList.innerHTML = '<div class="empty-state"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg><p>No plan yet. Enable the planner and run a task.</p></div>';
 				return;
 			}
-			planCard.style.display = 'block';
 			planList.innerHTML = plan.map(g => {
 				const statusCls = g.status || 'pending';
-				const statusLabel = {pending:'Ожидание', executing:'Выполняется', done:'Готово', failed:'Ошибка', skipped:'Пропущено'}[statusCls] || statusCls;
+				const statusLabel = {pending:'Pending', executing:'Executing', done:'Done', failed:'Failed', skipped:'Skipped'}[statusCls] || statusCls;
 				let html = '<div class="plan-item">';
 				html += '<span class="plan-idx">#' + (g.id + 1) + '</span>';
 				html += '<span style="flex:1">' + escapeHtml(g.description) + '</span>';
@@ -537,51 +1225,106 @@
 			}).join('');
 		}
 
-		async function loadGeoCountries() {
-			try {
-				const data = await get('/api/geo/countries');
-				(data.countries || []).forEach(c => {
-					const o = document.createElement('option');
-					o.value = c;
-					o.textContent = c.toUpperCase();
-					geoCountrySelect.appendChild(o);
-				});
-			} catch (e) { /* ignore */ }
+		function showStatus(cls, label, message) {
+			statusBox.style.display = 'flex';
+			const iconMap = {
+				running: '<svg class="status-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>',
+				done: '<svg class="status-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>',
+				error: '<svg class="status-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>'
+			};
+			statusBox.className = 'status-box ' + cls;
+			statusBox.innerHTML = (iconMap[cls] || '') + '<div><div class="status-label">' + escapeHtml(label) + '</div><div style="font-size:12px;margin-top:2px;">' + escapeHtml(message || '') + '</div></div>';
 		}
 
-		async function loadMemory() {
+		function showConfirm(question, taskId, onResolve) {
+			confirmQuestion.textContent = question;
+			confirmBox.style.display = 'block';
+			confirmYes.onclick = () => sendConfirm(taskId, 'yes', onResolve);
+			confirmNo.onclick = () => sendConfirm(taskId, 'no', onResolve);
+		}
+		function hideConfirm() {
+			confirmBox.style.display = 'none';
+			confirmYes.onclick = null;
+			confirmNo.onclick = null;
+		}
+		async function sendConfirm(taskId, answer, onResolve) {
 			try {
-				const data = await get('/api/memory/tasks?limit=10');
-				const tasks = data.tasks || [];
-				if (tasks.length === 0) {
-					memoryList.innerHTML = '<div style="color: var(--text-muted); font-size: 0.9rem;">Нет сохранённых задач.</div>';
-					return;
-				}
-				memoryList.innerHTML = tasks.map(t => {
-					const stateEmoji = {done:'✅', failed:'❌', planning:'📋', executing:'⚡', validating:'🔍'}[t.state] || '⏳';
-					let html = '<div class="memory-item">';
-					html += '<span class="mem-task">' + stateEmoji + ' ' + escapeHtml(t.task || '') + '</span>';
-					html += '<span class="mem-state ' + (t.state || '') + '">' + (t.state || '') + '</span>';
-					if (t.started_at) html += '<div class="mem-time">' + t.started_at + '</div>';
-					html += '</div>';
-					return html;
-				}).join('');
+				await post('/api/run/' + taskId + '/confirm', { answer });
+				hideConfirm();
+				onResolve();
 			} catch (e) {
-				memoryList.innerHTML = '<div style="color: var(--text-muted); font-size: 0.9rem;">Memory недоступна.</div>';
+				showStatus('error', 'Error', e.message);
 			}
 		}
 
+		// --- Polling ---
+		let pollAborted = false;
+		async function pollStatus(taskId) {
+			pollAborted = false;
+			const maxAttempts = 600;
+			for (let i = 0; i < maxAttempts && !pollAborted; i++) {
+				const s = await get('/api/run/' + taskId);
+				renderSteps(s.steps || []);
+
+				if (s.orchestrator && s.orchestrator.enabled && s.orchestrator.plan && s.orchestrator.plan.length > 0) {
+					renderPlan(s.orchestrator.plan);
+					const orchState = s.orchestrator.state || '';
+					const stateLabels = {idle:'Initializing', planning:'Planning...', executing:'Executing', validating:'Validating...', done:'Done', failed:'Error'};
+					const stateLabel = stateLabels[orchState] || orchState;
+					if (orchState === 'planning') {
+						showStatus('running', 'Orchestrator: ' + stateLabel, 'Decomposing task into sub-goals...');
+					} else if (orchState === 'validating') {
+						showStatus('running', 'Orchestrator: ' + stateLabel, 'Verifying step result...');
+					}
+				}
+
+				if (s.pending_confirm && s.pending_confirm.question) {
+					showStatus('running', 'Confirmation Required', 'Please answer the question below.');
+					await new Promise(resolve => {
+						showConfirm(s.pending_confirm.question, taskId, resolve);
+					});
+					continue;
+				}
+
+				if (s.status === 'done') {
+					showStatus('done', 'Complete', s.message || 'Task completed successfully.');
+					runBtn.disabled = false;
+					hideConfirm();
+					loadMemory();
+					loadDashboardStats();
+					return;
+				}
+				if (s.status === 'error') {
+					showStatus('error', 'Error', s.message || 'Task execution failed.');
+					runBtn.disabled = false;
+					hideConfirm();
+					loadMemory();
+					loadDashboardStats();
+					return;
+				}
+				showStatus('running', 'Running...', (s.message || 'Processing...'));
+				await new Promise(r => setTimeout(r, 1500));
+			}
+			showStatus('error', 'Timeout', 'Exceeded maximum wait time.');
+			runBtn.disabled = false;
+		}
+
+		// --- Run button ---
 		runBtn.addEventListener('click', async () => {
 			const task = (taskInput.value || '').trim();
 			if (!task) {
-				showStatus('error', 'Ошибка', 'Введите текст задачи.');
+				showStatus('error', 'Error', 'Please enter a task description.');
 				return;
 			}
 			runBtn.disabled = true;
 			hideConfirm();
 			renderSteps([]);
 			renderPlan([]);
-			showStatus('running', 'Запуск…', 'Старт задачи…');
+			showStatus('running', 'Starting...', 'Launching task...');
+
+			// Auto-switch to steps view
+			switchView('steps');
+
 			try {
 				const body = {
 					task,
@@ -606,42 +1349,133 @@
 				const res = await post('/api/run', body);
 				if (res.task_id) await pollStatus(res.task_id);
 				else {
-					showStatus('error', 'Ошибка', 'Нет task_id в ответе.');
+					showStatus('error', 'Error', 'No task_id in response.');
 					runBtn.disabled = false;
 				}
 			} catch (e) {
-				showStatus('error', 'Ошибка', e.message || String(e));
+				showStatus('error', 'Error', e.message || String(e));
 				runBtn.disabled = false;
 			}
 		});
 
+		// --- Load profiles ---
+		let allProfiles = {};
 		async function loadProfiles() {
-			const data = await get('/api/profiles');
-			profileSelect.innerHTML = '';
-			(data.profiles || []).forEach(name => {
-				const opt = document.createElement('option');
-				opt.value = name;
-				opt.textContent = name + (name === data.default_profile ? ' (по умолчанию)' : '');
-				profileSelect.appendChild(opt);
-			});
+			try {
+				const data = await get('/api/profiles');
+				allProfiles = data.profiles_detail || {};
+				profileSelect.innerHTML = '';
+				(data.profiles || []).forEach(name => {
+					const opt = document.createElement('option');
+					opt.value = name;
+					opt.textContent = name + (name === data.default_profile ? ' (default)' : '');
+					profileSelect.appendChild(opt);
+				});
+				document.getElementById('currentProfileLabel').textContent = data.default_profile || 'default';
+				document.getElementById('statProfiles').textContent = (data.profiles || []).length;
+
+				// Render profiles on dashboard
+				renderDashboardProfiles(data.profiles || [], data.profiles_detail || {}, data.default_profile);
+			} catch (e) {
+				// API might not be available
+			}
 		}
 
+		function renderDashboardProfiles(profiles, details, defaultProfile) {
+			const container = document.getElementById('dashboardProfilesList');
+			if (!profiles.length) {
+				container.innerHTML = '<div class="empty-state"><p>No profiles configured.</p></div>';
+				return;
+			}
+			container.innerHTML = profiles.map(name => {
+				const cfg = details[name] || {};
+				const isDefault = name === defaultProfile;
+				return '<div style="display:flex;align-items:center;gap:12px;padding:12px 16px;border:1px solid var(--border);border-radius:var(--radius-sm);margin-bottom:8px;">'
+					+ '<div style="width:36px;height:36px;border-radius:10px;background:var(--bg);display:flex;align-items:center;justify-content:center;flex-shrink:0;">'
+					+ '<svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>'
+					+ '</div>'
+					+ '<div style="flex:1;min-width:0;">'
+					+ '<div style="font-weight:600;font-size:13px;">' + escapeHtml(name) + (isDefault ? ' <span style="color:var(--text-muted);font-weight:400;">(default)</span>' : '') + '</div>'
+					+ '<div style="font-size:12px;color:var(--text-secondary);">' + escapeHtml(cfg.provider || 'custom') + ' / ' + escapeHtml(cfg.browser_backend || 'cdp') + '</div>'
+					+ '</div>'
+					+ '<span class="status-dot green"></span>'
+					+ '</div>';
+			}).join('');
+		}
+
+		// --- Browser visibility ---
 		function updatePlaywrightBrowserVisibility() {
 			const isPlaywright = browserBackendSelect.value === 'playwright';
 			playwrightBrowserWrap.style.opacity = isPlaywright ? '1' : '0.6';
 			playwrightBrowserWrap.style.pointerEvents = isPlaywright ? 'auto' : 'none';
-			const note = document.getElementById('playwrightBrowserNote');
-			if (note) note.style.display = isPlaywright ? 'block' : 'none';
 		}
 		browserBackendSelect.addEventListener('change', updatePlaywrightBrowserVisibility);
 		updatePlaywrightBrowserVisibility();
 
+		// --- Geo countries ---
+		async function loadGeoCountries() {
+			try {
+				const data = await get('/api/geo/countries');
+				(data.countries || []).forEach(c => {
+					const o = document.createElement('option');
+					o.value = c;
+					o.textContent = c.toUpperCase();
+					geoCountrySelect.appendChild(o);
+				});
+			} catch (e) { /* ignore */ }
+		}
+
+		// --- Memory ---
+		async function loadMemory() {
+			try {
+				const data = await get('/api/memory/tasks?limit=10');
+				const tasks = data.tasks || [];
+				if (tasks.length === 0) {
+					memoryList.innerHTML = '<div class="empty-state"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/></svg><p>No saved tasks.</p></div>';
+					document.getElementById('dashboardMemoryList').innerHTML = memoryList.innerHTML;
+					return;
+				}
+
+				const html = tasks.map(t => {
+					const stateClass = t.state || '';
+					const stateLabels = {done:'Done', failed:'Failed', planning:'Planning', executing:'Running', validating:'Validating'};
+					const stateLabel = stateLabels[t.state] || t.state || 'Unknown';
+					let h = '<div class="memory-item">';
+					h += '<span class="mem-task">' + escapeHtml(t.task || '') + '</span>';
+					h += '<span class="mem-state ' + stateClass + '">' + stateLabel + '</span>';
+					if (t.started_at) h += '<span class="mem-time">' + t.started_at + '</span>';
+					h += '</div>';
+					return h;
+				}).join('');
+				memoryList.innerHTML = html;
+				document.getElementById('dashboardMemoryList').innerHTML = html;
+			} catch (e) {
+				const msg = '<div style="color: var(--text-muted); font-size: 13px;">Memory unavailable.</div>';
+				memoryList.innerHTML = msg;
+				document.getElementById('dashboardMemoryList').innerHTML = msg;
+			}
+		}
+
+		// --- Dashboard stats ---
+		async function loadDashboardStats() {
+			try {
+				const data = await get('/api/memory/tasks?limit=100');
+				const tasks = data.tasks || [];
+				document.getElementById('statTotalTasks').textContent = tasks.length;
+				document.getElementById('statCompleted').textContent = tasks.filter(t => t.state === 'done').length;
+				document.getElementById('statFailed').textContent = tasks.filter(t => t.state === 'failed').length;
+			} catch (e) {
+				// API may not be available
+			}
+		}
+
+		// --- Init ---
 		providerSelect.addEventListener('change', updateModelOptions);
 		loadProfiles();
 		loadGeoCountries();
 		loadMemory();
+		loadDashboardStats();
 		updateModelOptions();
-		renderSteps([]);
 	</script>
 </body>
 </html>
